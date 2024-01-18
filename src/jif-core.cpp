@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <jif/jif.h>
 
 int main(int argc, char ** argv)
 {
