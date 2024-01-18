@@ -11,11 +11,22 @@ find_package(ament_cmake REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-add_executable(jif-core src/jif-core.cpp)
+cmake_policy(SET CMP0072 NEW)
+find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(glfw3 3.3 REQUIRED)
+
+add_executable(jif-core src/jif-core.cpp src/window.cpp src/stb_image.cpp)
 target_include_directories(jif-core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 target_compile_features(jif-core PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+
+target_link_libraries(jif-core
+  OpenGL::GL
+  GLEW::GLEW
+  glfw
+)
 
 install(TARGETS jif-core
   DESTINATION lib/${PROJECT_NAME})

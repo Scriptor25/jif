@@ -1,10 +1,14 @@
 #include <cstdio>
 #include <jif/jif.h>
+#include <jif/internal/window.h>
 
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
-  (void) argc;
-  (void) argv;
+  (void)argc;
+  (void)argv;
+
+  glfwInit();
+  jif::Window window(800, 600, "JIF GUI", "res/image/icon.png");
 
   printf("hello world jif package\n");
   return 0;
