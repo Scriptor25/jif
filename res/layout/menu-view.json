@@ -7,14 +7,14 @@
             "type": "menuitem",
             "id": "view.add",
             "name": "Add",
-            "alt": "ctrl+shift+A",
+            "alt": "alt+a",
             "action": "view.add"
         },
         {
             "type": "menuitem",
             "id": "view.manager",
             "name": "Manager",
-            "alt": "ctrl+shift+M",
+            "alt": "alt+m",
             "action": "view.manager"
         }
     ]

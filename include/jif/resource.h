@@ -14,7 +14,7 @@
 
 namespace jif
 {
-    class Resources
+    class ResourceManager
     {
     public:
         static void Init(const std::filesystem::path &executable);

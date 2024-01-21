@@ -8,16 +8,16 @@
  * ------------------------------------------------------------
  */
 
-#include <jif/resources.h>
+#include <jif/resource.h>
 
-std::filesystem::path jif::Resources::m_Root;
+std::filesystem::path jif::ResourceManager::m_Root;
 
-void jif::Resources::Init(const std::filesystem::path &executable)
+void jif::ResourceManager::Init(const std::filesystem::path &executable)
 {
     m_Root = executable.parent_path();
 }
 
-std::filesystem::path jif::Resources::GetResource(const char *name)
+std::filesystem::path jif::ResourceManager::GetResource(const char *name)
 {
     return m_Root / "res" / name;
 }

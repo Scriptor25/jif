@@ -3,6 +3,7 @@
     "id": "main",
     "menus": [
         "file",
-        "view"
+        "view",
+        "layout"
     ]
 }

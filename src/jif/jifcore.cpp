@@ -16,7 +16,7 @@
 #include <jif/window.h>
 #include <jif/jif.h>
 #include <jif/layout.h>
-#include <jif/resources.h>
+#include <jif/resource.h>
 
 void glfw_error_callback(int error_code, const char *description)
 {
@@ -28,14 +28,15 @@ int main(int argc, char **argv)
   (void)argc;
   (void)argv;
 
-  jif::Resources::Init(argv[0]);
-  jif::Layouts::Init();
-  auto &mainMenuBar = jif::Layouts::GetMenuBar("main");
+  jif::ResourceManager::Init(argv[0]);
+  jif::LayoutManager::Init();
+  auto &mainMenuBar = jif::LayoutManager::GetMenuBar("main");
+  auto &defaultLayout = jif::LayoutManager::GetLayout("default");
 
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
 
-  jif::Window window(800, 600, "JIF GUI", jif::Resources::GetResource("drawable/icon.png").c_str());
+  jif::Window window(800, 600, "JIF GUI", jif::ResourceManager::GetResource("drawable/icon.png").c_str());
   window.MakeCurrent();
 
   glewInit();
@@ -47,10 +48,27 @@ int main(int argc, char **argv)
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-  io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+  // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
   ImGui_ImplGlfw_InitForOpenGL(window.GetGLFW(), true);
   ImGui_ImplOpenGL3_Init();
+
+  std::map<std::string, std::function<void()>> ACTIONS{
+
+      {"file.exit", [window]()
+       { window.Close(); }},
+      {"view.add", []()
+       { printf("TODO: show add view wizard\n"); }},
+      {"view.manager", []()
+       { printf("TODO: show view manager\n"); }},
+      {"layout.new", []()
+       { printf("TODO: show new layout wizard\n"); }},
+      {"layout.save", []()
+       { printf("TODO: save layout or show save as wizard if save not yet existing\n"); }},
+      {"layout.saveas", []()
+       { printf("TODO: show save as wizard\n"); }},
+
+  };
 
   while (window.Spin())
   {
@@ -62,28 +80,34 @@ int main(int argc, char **argv)
     {
       for (auto &menu : mainMenuBar.Menus)
       {
-        auto menuid = mainMenuBar.Id + '.' + menu.Id;
-        ImGui::PushID(menuid.c_str());
-        if (ImGui::BeginMenu(menu.Name.c_str()))
+        auto menuid = menu.Name + "##" + mainMenuBar.Id + '.' + menu.Id;
+        if (ImGui::BeginMenu(menuid.c_str()))
         {
           for (auto &item : menu.Items)
           {
-            auto itemid = menuid + '.' + item.Id;
-            ImGui::PushID(itemid.c_str());
-            if (ImGui::MenuItem(item.Name.c_str(), item.Alt.c_str()))
-            {
-            }
-            ImGui::PopID();
+            auto itemid = item.Name + "##" + menuid + '.' + item.Id;
+            if (ImGui::MenuItem(itemid.c_str(), item.Alt.c_str()))
+              if (ACTIONS.count(item.Action))
+                ACTIONS[item.Action]();
           }
           ImGui::EndMenu();
         }
-        ImGui::PopID();
       }
       ImGui::EndMainMenuBar();
     }
 
     ImGui::DockSpaceOverViewport(NULL, ImGuiDockNodeFlags_PassthruCentralNode);
-    ImGui::ShowDemoWindow();
+
+    for (auto &view : defaultLayout.Views)
+    {
+      auto viewid = view.Name + "##" + defaultLayout.Id + '.' + view.Id;
+      if (ImGui::Begin(viewid.c_str()))
+      {
+        ImGui::SetWindowSize({view.Width, view.Height}, ImGuiCond_FirstUseEver);
+        ImGui::SetWindowPos({view.X, view.Y}, ImGuiCond_FirstUseEver);
+      }
+      ImGui::End();
+    }
 
     glViewport(0, 0, window.GetWidth(), window.GetHeight());
     glClear(GL_COLOR_BUFFER_BIT);

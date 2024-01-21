@@ -7,7 +7,7 @@
             "type": "menuitem",
             "id": "file.exit",
             "name": "Exit",
-            "alt": "Alt+F4|Esc",
+            "alt": "alt+f4|esc",
             "action": "file.exit"
         }
     ]
