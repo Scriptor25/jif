@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>The universal ROS2 JIF GUI</description>
   <maintainer email="f.schreiber.2000@web.de">Felix Schreiber</maintainer>
-  <license>BEERWARE</license>
+  <license>Beerware</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

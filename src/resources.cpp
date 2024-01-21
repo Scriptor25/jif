@@ -8,19 +8,16 @@
  * ------------------------------------------------------------
  */
 
-#pragma once
+#include <jif/jif.h>
 
-#include <filesystem>
+std::filesystem::path jif::Resources::m_Root;
 
-namespace jif
+void jif::Resources::Init(const std::filesystem::path &executable)
 {
-    class Resources
-    {
-    public:
-        static void Init(const std::filesystem::path &executable);
-        static std::filesystem::path GetResource(const char *name);
+    m_Root = executable.parent_path();
+}
 
-    private:
-        static std::filesystem::path m_Root;
-    };
+std::filesystem::path jif::Resources::GetResource(const char *name)
+{
+    return m_Root / "res" / name;
 }
