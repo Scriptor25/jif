@@ -18,7 +18,7 @@ find_package(glfw3 3.3 REQUIRED)
 
 file(GLOB jif_src CONFIGURE_DEPENDS "src/*.cpp" "src/imgui/*.cpp" "src/imgui/backends/*.cpp")
 
-add_executable(jif-core src/jif-core.cpp ${jif_src})
+add_executable(jif-core ${jif_src})
 target_include_directories(jif-core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
