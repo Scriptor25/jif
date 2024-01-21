@@ -1,0 +1,21 @@
+{
+    "type": "menu",
+    "id": "view",
+    "name": "View",
+    "items": [
+        {
+            "type": "menuitem",
+            "id": "view.add",
+            "name": "Add",
+            "alt": "ctrl+shift+A",
+            "action": "view.add"
+        },
+        {
+            "type": "menuitem",
+            "id": "view.manager",
+            "name": "Manager",
+            "alt": "ctrl+shift+M",
+            "action": "view.manager"
+        }
+    ]
+}

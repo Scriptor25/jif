@@ -13,8 +13,10 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/imgui.h>
-#include <jif/jif.h>
 #include <jif/internal/window.h>
+#include <jif/jif.h>
+#include <jif/resources/layout.h>
+#include <jif/resources/resources.h>
 
 void glfw_error_callback(int error_code, const char *description)
 {
@@ -27,11 +29,13 @@ int main(int argc, char **argv)
   (void)argv;
 
   jif::Resources::Init(argv[0]);
+  jif::Layouts::Init();
+  auto &mainMenuBar = jif::Layouts::GetMenuBar("main");
 
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
 
-  jif::Window window(800, 600, "JIF GUI", jif::Resources::GetResource("image/icon.png").c_str());
+  jif::Window window(800, 600, "JIF GUI", jif::Resources::GetResource("drawable/icon.png").c_str());
   window.MakeCurrent();
 
   glewInit();
@@ -53,6 +57,30 @@ int main(int argc, char **argv)
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
+    if (ImGui::BeginMainMenuBar())
+    {
+      for (auto &menu : mainMenuBar.Menus)
+      {
+        auto menuid = mainMenuBar.Id + '.' + menu.Id;
+        ImGui::PushID(menuid.c_str());
+        if (ImGui::BeginMenu(menu.Name.c_str()))
+        {
+          for (auto &item : menu.Items)
+          {
+            auto itemid = menuid + '.' + item.Id;
+            ImGui::PushID(itemid.c_str());
+            if (ImGui::MenuItem(item.Name.c_str(), item.Alt.c_str()))
+            {
+            }
+            ImGui::PopID();
+          }
+          ImGui::EndMenu();
+        }
+        ImGui::PopID();
+      }
+      ImGui::EndMainMenuBar();
+    }
 
     ImGui::DockSpaceOverViewport(NULL, ImGuiDockNodeFlags_PassthruCentralNode);
     ImGui::ShowDemoWindow();

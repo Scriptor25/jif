@@ -1,0 +1,14 @@
+{
+    "type": "menu",
+    "id": "file",
+    "name": "File",
+    "items": [
+        {
+            "type": "menuitem",
+            "id": "file.exit",
+            "name": "Exit",
+            "alt": "Alt+F4|Esc",
+            "action": "file.exit"
+        }
+    ]
+}

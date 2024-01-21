@@ -9,18 +9,3 @@
  */
 
 #pragma once
-
-#include <filesystem>
-
-namespace jif
-{
-    class Resources
-    {
-    public:
-        static void Init(const std::filesystem::path &executable);
-        static std::filesystem::path GetResource(const char *name);
-
-    private:
-        static std::filesystem::path m_Root;
-    };
-}

@@ -1,0 +1,8 @@
+{
+    "type": "menubar",
+    "id": "main",
+    "menus": [
+        "file",
+        "view"
+    ]
+}

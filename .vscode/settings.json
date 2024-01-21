@@ -51,6 +51,14 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "cinttypes": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "any": "cpp",
+        "forward_list": "cpp",
+        "map": "cpp",
+        "optional": "cpp",
+        "ranges": "cpp",
+        "valarray": "cpp",
+        "fstream": "cpp",
+        "iostream": "cpp"
     }
 }
