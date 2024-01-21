@@ -11,6 +11,8 @@ namespace jif
 
         operator bool() const;
 
+        bool Spin();
+
     private:
         int Error(const char *format, ...);
 

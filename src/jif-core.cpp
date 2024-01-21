@@ -10,6 +10,9 @@ int main(int argc, char **argv)
   glfwInit();
   jif::Window window(800, 600, "JIF GUI", "res/image/icon.png");
 
+  while (window.Spin())
+    ;
+
   printf("hello world jif package\n");
   return 0;
 }
