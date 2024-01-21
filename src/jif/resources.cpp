@@ -14,10 +14,10 @@ std::filesystem::path jif::ResourceManager::m_Root;
 
 void jif::ResourceManager::Init(const std::filesystem::path &executable)
 {
-    m_Root = executable.parent_path();
+    m_Root = executable.parent_path() / "res";
 }
 
 std::filesystem::path jif::ResourceManager::GetResource(const char *name)
 {
-    return m_Root / "res" / name;
+    return m_Root / name;
 }

@@ -39,6 +39,10 @@ int main(int argc, char **argv)
   jif::Window window(800, 600, "JIF GUI", jif::ResourceManager::GetResource("drawable/icon.png").c_str());
   window.MakeCurrent();
 
+  bool reload = false;
+  window.Register([&reload](int key, int scancode, int action, int mods)
+                  { if (key == GLFW_KEY_R && action == GLFW_RELEASE) reload = true; });
+
   glewInit();
   glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 
@@ -72,6 +76,12 @@ int main(int argc, char **argv)
 
   while (window.Spin())
   {
+    if (reload)
+    {
+      reload = false;
+      jif::LayoutManager::Init();
+    }
+
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
