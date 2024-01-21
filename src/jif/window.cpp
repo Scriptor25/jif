@@ -9,7 +9,7 @@
  */
 
 #include <cstdarg>
-#include <jif/internal/window.h>
+#include <jif/window.h>
 #include <stb/stb_image.h>
 
 jif::Window::Window(int width, int height, const char *title, const char *iconname)

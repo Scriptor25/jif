@@ -13,10 +13,10 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/imgui.h>
-#include <jif/internal/window.h>
+#include <jif/window.h>
 #include <jif/jif.h>
-#include <jif/resources/layout.h>
-#include <jif/resources/resources.h>
+#include <jif/layout.h>
+#include <jif/resources.h>
 
 void glfw_error_callback(int error_code, const char *description)
 {

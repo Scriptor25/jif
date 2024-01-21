@@ -8,7 +8,7 @@
  * ------------------------------------------------------------
  */
 
-#include <jif/resources/resources.h>
+#include <jif/resources.h>
 
 std::filesystem::path jif::Resources::m_Root;
 

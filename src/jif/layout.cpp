@@ -1,7 +1,7 @@
 #include <fstream>
 #include <iostream>
-#include <jif/resources/layout.h>
-#include <jif/resources/resources.h>
+#include <jif/layout.h>
+#include <jif/resources.h>
 
 std::map<std::string, jif::MenuItem> jif::Layouts::m_MenuItems;
 std::map<std::string, jif::Menu> jif::Layouts::m_Menus;
