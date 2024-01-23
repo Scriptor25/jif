@@ -14,10 +14,11 @@
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/imgui.h>
 #include <iostream>
-#include <jif/window.h>
 #include <jif/jif.h>
+#include <jif/jifmanager.h>
 #include <jif/layout.h>
 #include <jif/resource.h>
+#include <jif/window.h>
 
 void glfw_error_callback(int error_code, const char *description)
 {
@@ -30,9 +31,10 @@ int main(int argc, char **argv)
   (void)argv;
 
   jif::ResourceManager::Init(argv[0]);
-  jif::LayoutManager::Init();
-  auto menubar = jif::LayoutManager::GetMenuBar("main");
-  auto layout = jif::LayoutManager::GetLayout("default");
+  jif::LayoutManager layoutmgr;
+  jif::JIFManager jifmgr;
+  auto menubar = layoutmgr.GetMenuBar("main");
+  auto layout = layoutmgr.GetLayout("default");
 
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
@@ -41,16 +43,16 @@ int main(int argc, char **argv)
   window.MakeCurrent();
 
   window.Register(
-      [&menubar, &layout](int key, int scancode, int action, int mods)
+      [&menubar, &layout, &layoutmgr](int key, int scancode, int action, int mods)
       {
         (void)scancode;
         (void)mods;
 
         if (key == GLFW_KEY_R && action == GLFW_RELEASE)
         {
-          jif::LayoutManager::Init();
-          menubar = jif::LayoutManager::GetMenuBar("main");
-          layout = jif::LayoutManager::GetLayout("default");
+          layoutmgr.Reinit();
+          menubar = layoutmgr.GetMenuBar("main");
+          layout = layoutmgr.GetLayout("default");
         }
       });
 
@@ -70,7 +72,7 @@ int main(int argc, char **argv)
 
   std::map<std::string, std::function<void()>> ACTIONS{
 
-      {"file.exit", [window]()
+      {"file.exit", [&window]()
        { window.Close(); }},
       {"view.add", []()
        { printf("TODO: show add view wizard\n"); }},
@@ -78,10 +80,10 @@ int main(int argc, char **argv)
        { printf("TODO: show view manager\n"); }},
       {"layout.new", []()
        { printf("TODO: show new layout wizard\n"); }},
-      {"layout.save", []()
-       { printf("TODO: save layout or show save as wizard if save not yet existing\n"); }},
-      {"layout.saveas", []()
-       { printf("TODO: show save as wizard\n"); }},
+      {"layout.save", [&jifmgr]()
+       { jifmgr.SaveLayout(); }},
+      {"layout.saveas", [&jifmgr]()
+       { jifmgr.OpenSaveWizard(); }},
 
   };
 
@@ -91,14 +93,17 @@ int main(int argc, char **argv)
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    jifmgr.ShowSaveWizard();
+
     if (ImGui::BeginMainMenuBar())
     {
-      for (auto &menu : menubar->Menus)
+      for (auto &menustr : menubar->Menus)
       {
-        auto menuid = menu.Name + "##" + menubar->Id + '.' + menu.Id;
+        auto menu = layoutmgr.GetMenu(menustr);
+        auto menuid = menu->Name + "##" + menubar->Id + '.' + menu->Id;
         if (ImGui::BeginMenu(menuid.c_str()))
         {
-          for (auto &item : menu.Items)
+          for (auto &item : menu->Items)
           {
             auto itemid = item.Name + "##" + menuid + '.' + item.Id;
             if (ImGui::MenuItem(itemid.c_str(), item.Alt.c_str()))
@@ -118,8 +123,6 @@ int main(int argc, char **argv)
       auto viewid = view.Name + "##" + layout->Id + '.' + view.Id;
       if (ImGui::Begin(viewid.c_str()))
       {
-        ImGui::SetWindowSize({view.Width, view.Height}, ImGuiCond_FirstUseEver);
-        ImGui::SetWindowPos({view.X, view.Y}, ImGuiCond_FirstUseEver);
       }
       ImGui::End();
     }

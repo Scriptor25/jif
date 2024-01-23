@@ -3,31 +3,18 @@
 #include <jif/layout.h>
 #include <jif/resource.h>
 
-std::map<std::string, jif::MenuItem> jif::LayoutManager::m_MenuItems;
-std::map<std::string, jif::Menu> jif::LayoutManager::m_Menus;
-std::map<std::string, jif::MenuBar> jif::LayoutManager::m_MenuBars;
-std::map<std::string, jif::View> jif::LayoutManager::m_Views;
-std::map<std::string, jif::Layout> jif::LayoutManager::m_Layouts;
-std::map<std::string, std::vector<std::string>> jif::LayoutManager::m_WaitForMenus;
-
-void jif::MenuBar::SetMenu(const Menu &menu)
+jif::LayoutManager::LayoutManager()
 {
-    for (auto &m : Menus)
-        if (m.Id == menu.Id)
-        {
-            m = menu;
-            break;
-        }
+    Reinit();
 }
 
-void jif::LayoutManager::Init()
+void jif::LayoutManager::Reinit()
 {
     m_MenuItems.clear();
     m_Menus.clear();
     m_MenuBars.clear();
     m_Views.clear();
     m_Layouts.clear();
-    m_WaitForMenus.clear();
 
     auto layouts = ResourceManager::GetResource("layout");
     for (auto &file : std::filesystem::directory_iterator(layouts))
@@ -46,42 +33,18 @@ void jif::LayoutManager::Init()
         stream >> json;
 
         std::string type = json["type"];
+        std::string id = json["id"];
         if (type == "menuitem")
-            json.get<MenuItem>();
+            m_MenuItems[id] = json.get<MenuItem>();
         else if (type == "menu")
-            json.get<Menu>();
+            m_Menus[id] = json.get<Menu>();
         else if (type == "menubar")
-            json.get<MenuBar>();
+            m_MenuBars[id] = json.get<MenuBar>();
         else if (type == "view")
-            json.get<View>();
+            m_Views[id] = json.get<View>();
         else if (type == "layout")
-            json.get<Layout>();
+            m_Layouts[id] = json.get<Layout>();
     }
-
-    /*std::cout << "Menu Items:" << std::endl;
-    for (auto &entry : m_MenuItems)
-        std::cout << entry.second << std::endl;
-    std::cout << std::endl;
-
-    std::cout << "Menus:" << std::endl;
-    for (auto &entry : m_Menus)
-        std::cout << entry.second << std::endl;
-    std::cout << std::endl;
-
-    std::cout << "Menu Bars:" << std::endl;
-    for (auto &entry : m_MenuBars)
-        std::cout << entry.second << std::endl;
-    std::cout << std::endl;
-
-    std::cout << "Views:" << std::endl;
-    for (auto &entry : m_Views)
-        std::cout << entry.second << std::endl;
-    std::cout << std::endl;
-
-    std::cout << "Layouts:" << std::endl;
-    for (auto &entry : m_Layouts)
-        std::cout << entry.second << std::endl;
-    std::cout << std::endl;*/
 }
 
 const jif::MenuBar *jif::LayoutManager::GetMenuBar(const std::string &id)
@@ -89,7 +52,40 @@ const jif::MenuBar *jif::LayoutManager::GetMenuBar(const std::string &id)
     return &m_MenuBars[id];
 }
 
+const jif::Menu *jif::LayoutManager::GetMenu(const std::string &id)
+{
+    return &m_Menus[id];
+}
+
 const jif::Layout *jif::LayoutManager::GetLayout(const std::string &id)
 {
     return &m_Layouts[id];
+}
+
+std::ostream &jif::LayoutManager::operator>>(std::ostream &out) const
+{
+    out << "Menu Items:" << std::endl;
+    for (auto &entry : m_MenuItems)
+        out << entry.second << std::endl;
+    out << std::endl;
+
+    out << "Menus:" << std::endl;
+    for (auto &entry : m_Menus)
+        out << entry.second << std::endl;
+    out << std::endl;
+
+    out << "Menu Bars:" << std::endl;
+    for (auto &entry : m_MenuBars)
+        out << entry.second << std::endl;
+    out << std::endl;
+
+    out << "Views:" << std::endl;
+    for (auto &entry : m_Views)
+        out << entry.second << std::endl;
+    out << std::endl;
+
+    out << "Layouts:" << std::endl;
+    for (auto &entry : m_Layouts)
+        out << entry.second << std::endl;
+    return out << std::endl;
 }

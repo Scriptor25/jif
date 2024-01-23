@@ -31,10 +31,6 @@ void jif::LayoutManager::to_json(nlohmann::json &json, const View &view)
     json["id"] = view.Id;
     json["name"] = view.Name;
     json["view"] = view.View;
-    json["x"] = view.X;
-    json["y"] = view.Y;
-    json["width"] = view.Width;
-    json["height"] = view.Height;
     json["extra"] = view.Extra;
 }
 
@@ -52,8 +48,6 @@ void jif::LayoutManager::from_json(const nlohmann::json &json, MenuItem &menuite
     menuitem.Name = json["name"];
     menuitem.Alt = json["alt"];
     menuitem.Action = json["action"];
-
-    m_MenuItems[menuitem.Id] = menuitem;
 }
 
 void jif::LayoutManager::from_json(const nlohmann::json &json, Menu &menu)
@@ -61,35 +55,12 @@ void jif::LayoutManager::from_json(const nlohmann::json &json, Menu &menu)
     menu.Id = json["id"];
     menu.Name = json["name"];
     menu.Items = json["items"];
-
-    m_Menus[menu.Id] = menu;
-
-    if (m_WaitForMenus.count(menu.Id))
-    {
-        auto &menubars = m_WaitForMenus[menu.Id];
-        for (auto &id : menubars)
-            m_MenuBars[id].SetMenu(menu);
-        m_WaitForMenus.erase(menu.Id);
-    }
 }
 
 void jif::LayoutManager::from_json(const nlohmann::json &json, MenuBar &menubar)
 {
     menubar.Id = json["id"];
-
-    std::vector<std::string> menus = json["menus"];
-    for (auto &id : menus)
-    {
-        if (!m_Menus.count(id))
-        {
-            menubar.Menus.push_back(Menu(id));
-            m_WaitForMenus[id].push_back(menubar.Id);
-            continue;
-        }
-        menubar.Menus.push_back(m_Menus[id]);
-    }
-
-    m_MenuBars[menubar.Id] = menubar;
+    menubar.Menus = json["menus"];
 }
 
 void jif::LayoutManager::from_json(const nlohmann::json &json, View &view)
@@ -97,13 +68,7 @@ void jif::LayoutManager::from_json(const nlohmann::json &json, View &view)
     view.Id = json["id"];
     view.Name = json["name"];
     view.View = json["view"];
-    view.X = json["x"];
-    view.Y = json["y"];
-    view.Width = json["width"];
-    view.Height = json["height"];
     view.Extra = json["extra"];
-
-    m_Views[view.Id] = view;
 }
 
 void jif::LayoutManager::from_json(const nlohmann::json &json, Layout &layout)
@@ -111,8 +76,6 @@ void jif::LayoutManager::from_json(const nlohmann::json &json, Layout &layout)
     layout.Id = json["id"];
     layout.Name = json["name"];
     layout.Views = json["views"];
-
-    m_Layouts[layout.Id] = layout;
 }
 
 template <typename T>
@@ -151,6 +114,11 @@ std::ostream &jif::operator<<(std::ostream &out, const std::map<K, V> &map)
     return out << " }";
 }
 
+std::ostream &jif::operator<<(std::ostream &out, const LayoutManager &mgr)
+{
+    return mgr >> out;
+}
+
 std::ostream &jif::operator<<(std::ostream &out, const MenuItem &menuitem)
 {
     return out << "{ Id: " << menuitem.Id << ", Name: " << menuitem.Name << ", Alt: " << menuitem.Alt << ", Action: " << menuitem.Action << " }";
@@ -168,7 +136,7 @@ std::ostream &jif::operator<<(std::ostream &out, const MenuBar &menubar)
 
 std::ostream &jif::operator<<(std::ostream &out, const View &view)
 {
-    return out << "{ Id: " << view.Id << ", Name: " << view.Name << ", View: " << view.View << ", X: " << view.X << ", Y: " << view.Y << ", Width: " << view.Width << ", Height: " << view.Height << ", Extra: " << view.Extra << " }";
+    return out << "{ Id: " << view.Id << ", Name: " << view.Name << ", View: " << view.View << ", Extra: " << view.Extra << " }";
 }
 
 std::ostream &jif::operator<<(std::ostream &out, const Layout &layout)

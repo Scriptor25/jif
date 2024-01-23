@@ -26,9 +26,6 @@ namespace jif
 
     struct Menu
     {
-        Menu() {}
-        Menu(const std::string &id) : Id(id), Name(id) {}
-
         std::string Id;
         std::string Name;
         std::vector<MenuItem> Items;
@@ -36,10 +33,8 @@ namespace jif
 
     struct MenuBar
     {
-        void SetMenu(const Menu &menu);
-
         std::string Id;
-        std::vector<Menu> Menus;
+        std::vector<std::string> Menus;
     };
 
     struct View
@@ -47,10 +42,6 @@ namespace jif
         std::string Id;
         std::string Name;
         std::string View;
-        float X;
-        float Y;
-        float Width;
-        float Height;
         std::map<std::string, std::string> Extra;
     };
 
@@ -64,10 +55,15 @@ namespace jif
     class LayoutManager
     {
     public:
-        static void Init();
+        LayoutManager();
 
-        static const MenuBar *GetMenuBar(const std::string &id);
-        static const Layout *GetLayout(const std::string &id);
+        void Reinit();
+
+        const MenuBar *GetMenuBar(const std::string &id);
+        const Menu *GetMenu(const std::string &id);
+        const Layout *GetLayout(const std::string &id);
+
+        std::ostream &operator>>(std::ostream &out) const;
 
         static void to_json(nlohmann::json &json, const MenuItem &menuitem);
         static void to_json(nlohmann::json &json, const Menu &menu);
@@ -82,13 +78,11 @@ namespace jif
         static void from_json(const nlohmann::json &json, Layout &layout);
 
     private:
-        static std::map<std::string, MenuItem> m_MenuItems;
-        static std::map<std::string, Menu> m_Menus;
-        static std::map<std::string, MenuBar> m_MenuBars;
-        static std::map<std::string, View> m_Views;
-        static std::map<std::string, Layout> m_Layouts;
-
-        static std::map<std::string, std::vector<std::string>> m_WaitForMenus;
+        std::map<std::string, MenuItem> m_MenuItems;
+        std::map<std::string, Menu> m_Menus;
+        std::map<std::string, MenuBar> m_MenuBars;
+        std::map<std::string, View> m_Views;
+        std::map<std::string, Layout> m_Layouts;
     };
 
     template <typename T>
@@ -96,6 +90,7 @@ namespace jif
     template <typename K, typename V>
     std::ostream &operator<<(std::ostream &out, const std::map<K, V> &map);
 
+    std::ostream &operator<<(std::ostream &out, const LayoutManager &mgr);
     std::ostream &operator<<(std::ostream &out, const MenuItem &menuitem);
     std::ostream &operator<<(std::ostream &out, const Menu &menu);
     std::ostream &operator<<(std::ostream &out, const MenuBar &menubar);

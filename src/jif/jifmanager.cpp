@@ -1,8 +1,10 @@
+#include <fstream>
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <iostream>
 #include <jif/jifmanager.h>
 #include <jif/jiffile.h>
+#include <jif/layout.h>
 
 void jif::JIFManager::CreateView(const std::string &label, JIFViewType type)
 {
@@ -14,22 +16,45 @@ void jif::JIFManager::CreateView(const std::string &label, JIFViewType type)
 
 void jif::JIFManager::SaveLayout()
 {
-    if (m_Filename.empty())
+    if (m_LayoutName.empty() || m_LayoutID.empty())
     {
         OpenSaveWizard();
         return;
     }
 
-    std::cout << "TODO: create layout.json" << std::endl;
-    std::cout << "TODO: create info.json" << std::endl;
-    std::cout << "TODO: copy imgui.ini" << std::endl;
-    std::cout << "TODO: pack jif file" << std::endl;
-    // PackJIF("", m_Filename);
+    Layout layout;
+    layout.Id = m_LayoutID;
+    layout.Name = m_LayoutName;
+    for (auto &v : m_Views)
+    {
+        View view;
+        view.Id = v.second->ImGuiID();
+        view.Name = v.second->Label();
+        view.View = ToString(v.second->Type());
+        layout.Views.push_back(view);
+    }
+
+    std::filesystem::remove_all("tmp");
+    std::filesystem::create_directory("tmp");
+    std::filesystem::path layoutjson("tmp/layout.json");
+    std::filesystem::path imguiini("tmp/imgui.ini");
+
+    {
+        nlohmann::json json = layout;
+        std::ofstream stream(layoutjson);
+        stream << json;
+    }
+
+    std::filesystem::copy_file("imgui.ini", imguiini);
+
+    PackJIF("tmp", m_LayoutName + ".jif");
 }
 
 void jif::JIFManager::OpenSaveWizard()
 {
     m_SaveWizardOpen = true;
+    m_LayoutName.clear();
+    m_LayoutID.clear();
 }
 
 void jif::JIFManager::ShowSaveWizard()
@@ -37,12 +62,44 @@ void jif::JIFManager::ShowSaveWizard()
     if (!m_SaveWizardOpen)
         return;
 
-    if (ImGui::Begin("Save Layout", &m_SaveWizardOpen))
+    if (ImGui::Begin("Save Layout", &m_SaveWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        ImGui::InputText("Save File", &m_Filename);
-        ImGui::Button("Save");
+        ImGui::InputText("Name", &m_LayoutName);
+        ImGui::InputText("ID", &m_LayoutID);
+        ImGui::Separator();
+        if (ImGui::Button("Save"))
+        {
+            m_SaveWizardOpen = false;
+            SaveLayout();
+        }
         ImGui::SameLine();
-        ImGui::Button("Cancel");
+        if (ImGui::Button("Cancel"))
+        {
+            m_SaveWizardOpen = false;
+            m_LayoutName.clear();
+            m_LayoutID.clear();
+        }
     }
     ImGui::End();
+}
+
+std::string jif::JIFManager::ToString(JIFViewType type)
+{
+    switch (type)
+    {
+    case JIFViewType_Camera:
+        return "camera";
+    case JIFViewType_Debug:
+        return "debug";
+    case JIFViewType_Graph:
+        return "graph";
+    case JIFViewType_Help:
+        return "help";
+    case JIFViewType_Joystick:
+        return "joystick";
+    case JIFViewType_Terminal:
+        return "terminal";
+    default:
+        return "none";
+    }
 }

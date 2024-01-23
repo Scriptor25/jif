@@ -1,3 +1,13 @@
+/*
+ * ------------------------------------------------------------
+ * "THE BEERWARE LICENSE" (Revision 42):
+ * Felix Schreiber wrote this code. As long as you retain this
+ * notice, you can do whatever you want with this stuff. If we
+ * meet someday, and you think this stuff is worth it, you can
+ * buy me a beer in return.
+ * ------------------------------------------------------------
+ */
+
 #pragma once
 
 #include <map>
@@ -50,10 +60,13 @@ namespace jif
         void OpenSaveWizard();
         void ShowSaveWizard();
 
-    private:
-        std::string m_Filename;
-        std::map<size_t, JIFView *> m_Views;
+        static std::string ToString(JIFViewType type);
 
+    private:
+        std::string m_LayoutID;
+        std::string m_LayoutName;
         bool m_SaveWizardOpen = false;
+
+        std::map<size_t, JIFView *> m_Views;
     };
 }

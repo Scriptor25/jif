@@ -11,13 +11,15 @@ void jif::UnpackJIF(const std::filesystem::path &srcjif, const std::filesystem::
 
 void jif::PackJIF(const std::filesystem::path &srcdir, const std::filesystem::path &dstjif)
 {
+    auto layoutjson = srcdir / "layout.json";
+    auto imguiini = srcdir / "imgui.ini";
+
     const char *files[]{
-        (srcdir / "").c_str(),
-        (srcdir / "").c_str(),
-        (srcdir / "").c_str(),
+        layoutjson.c_str(),
+        imguiini.c_str(),
     };
 
-    auto err = zip_create(dstjif.c_str(), files, 3);
+    auto err = zip_create(dstjif.c_str(), files, 2);
     if (err != 0)
         std::cerr << "Failed to create zip " << dstjif << " from dir " << srcdir << ": error code " << err << std::endl;
 }
