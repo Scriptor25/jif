@@ -13,6 +13,7 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/imgui.h>
+#include <iostream>
 #include <jif/window.h>
 #include <jif/jif.h>
 #include <jif/layout.h>
@@ -30,8 +31,8 @@ int main(int argc, char **argv)
 
   jif::ResourceManager::Init(argv[0]);
   jif::LayoutManager::Init();
-  auto &mainMenuBar = jif::LayoutManager::GetMenuBar("main");
-  auto &defaultLayout = jif::LayoutManager::GetLayout("default");
+  auto mainMenuBar = jif::LayoutManager::GetMenuBar("main");
+  auto defaultLayout = jif::LayoutManager::GetLayout("default");
 
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
@@ -87,6 +88,8 @@ int main(int argc, char **argv)
     {
       reload = false;
       jif::LayoutManager::Init();
+      mainMenuBar = jif::LayoutManager::GetMenuBar("main");
+      defaultLayout = jif::LayoutManager::GetLayout("default");
     }
 
     ImGui_ImplOpenGL3_NewFrame();
@@ -95,9 +98,9 @@ int main(int argc, char **argv)
 
     if (ImGui::BeginMainMenuBar())
     {
-      for (auto &menu : mainMenuBar.Menus)
+      for (auto &menu : mainMenuBar->Menus)
       {
-        auto menuid = menu.Name + "##" + mainMenuBar.Id + '.' + menu.Id;
+        auto menuid = menu.Name + "##" + mainMenuBar->Id + '.' + menu.Id;
         if (ImGui::BeginMenu(menuid.c_str()))
         {
           for (auto &item : menu.Items)
@@ -115,9 +118,9 @@ int main(int argc, char **argv)
 
     ImGui::DockSpaceOverViewport(NULL, ImGuiDockNodeFlags_PassthruCentralNode);
 
-    for (auto &view : defaultLayout.Views)
+    for (auto &view : defaultLayout->Views)
     {
-      auto viewid = view.Name + "##" + defaultLayout.Id + '.' + view.Id;
+      auto viewid = view.Name + "##" + defaultLayout->Id + '.' + view.Id;
       if (ImGui::Begin(viewid.c_str()))
       {
         ImGui::SetWindowSize({view.Width, view.Height}, ImGuiCond_FirstUseEver);

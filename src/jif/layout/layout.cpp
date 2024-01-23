@@ -25,6 +25,9 @@ void jif::LayoutManager::Init()
     m_MenuItems.clear();
     m_Menus.clear();
     m_MenuBars.clear();
+    m_Views.clear();
+    m_Layouts.clear();
+    m_WaitForMenus.clear();
 
     auto layouts = ResourceManager::GetResource("layout");
     for (auto &file : std::filesystem::directory_iterator(layouts))
@@ -81,12 +84,12 @@ void jif::LayoutManager::Init()
     std::cout << std::endl;*/
 }
 
-const jif::MenuBar &jif::LayoutManager::GetMenuBar(const std::string &id)
+const jif::MenuBar *jif::LayoutManager::GetMenuBar(const std::string &id)
 {
-    return m_MenuBars[id];
+    return &m_MenuBars[id];
 }
 
-const jif::Layout &jif::LayoutManager::GetLayout(const std::string &id)
+const jif::Layout *jif::LayoutManager::GetLayout(const std::string &id)
 {
-    return m_Layouts[id];
+    return &m_Layouts[id];
 }

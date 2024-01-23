@@ -66,8 +66,8 @@ namespace jif
     public:
         static void Init();
 
-        static const MenuBar &GetMenuBar(const std::string &id);
-        static const Layout &GetLayout(const std::string &id);
+        static const MenuBar *GetMenuBar(const std::string &id);
+        static const Layout *GetLayout(const std::string &id);
 
         static void to_json(nlohmann::json &json, const MenuItem &menuitem);
         static void to_json(nlohmann::json &json, const Menu &menu);
