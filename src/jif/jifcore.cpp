@@ -40,8 +40,15 @@ int main(int argc, char **argv)
   window.MakeCurrent();
 
   bool reload = false;
-  window.Register([&reload](int key, int scancode, int action, int mods)
-                  { if (key == GLFW_KEY_R && action == GLFW_RELEASE) reload = true; });
+  window.Register(
+      [&reload](int key, int scancode, int action, int mods)
+      {
+        (void)scancode;
+        (void)mods;
+
+        if (key == GLFW_KEY_R && action == GLFW_RELEASE)
+          reload = true;
+      });
 
   glewInit();
   glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
