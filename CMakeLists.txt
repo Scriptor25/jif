@@ -16,7 +16,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 
-file(GLOB jif_src CONFIGURE_DEPENDS "src/jif/*.cpp" "src/jif/layout/*.cpp" "src/imgui/*.cpp" "src/imgui/backends/*.cpp" "src/kubazip/*.c")
+file(GLOB jif_src CONFIGURE_DEPENDS "src/jif/*.cpp" "src/jif/layout/*.cpp" "src/imgui/*.cpp" "src/imgui/backends/*.cpp" "src/imgui/misc/*.cpp" "src/kubazip/*.c")
 
 add_executable(jif-core ${jif_src})
 target_include_directories(jif-core PUBLIC

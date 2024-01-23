@@ -45,10 +45,10 @@ namespace jif
 
         std::map<size_t, JIFView *> &Views() { return m_Views; }
 
-        void SaveLayoutAs(const std::string &filename);
         void SaveLayout();
 
-        void ShowSaveWizard(bool *open = nullptr);
+        void OpenSaveWizard();
+        void ShowSaveWizard();
 
     private:
         std::string m_Filename;

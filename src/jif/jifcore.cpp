@@ -31,8 +31,8 @@ int main(int argc, char **argv)
 
   jif::ResourceManager::Init(argv[0]);
   jif::LayoutManager::Init();
-  auto mainMenuBar = jif::LayoutManager::GetMenuBar("main");
-  auto defaultLayout = jif::LayoutManager::GetLayout("default");
+  auto menubar = jif::LayoutManager::GetMenuBar("main");
+  auto layout = jif::LayoutManager::GetLayout("default");
 
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
@@ -40,15 +40,18 @@ int main(int argc, char **argv)
   jif::Window window(800, 600, "JIF GUI", jif::ResourceManager::GetResource("drawable/icon.png").c_str());
   window.MakeCurrent();
 
-  bool reload = false;
   window.Register(
-      [&reload](int key, int scancode, int action, int mods)
+      [&menubar, &layout](int key, int scancode, int action, int mods)
       {
         (void)scancode;
         (void)mods;
 
         if (key == GLFW_KEY_R && action == GLFW_RELEASE)
-          reload = true;
+        {
+          jif::LayoutManager::Init();
+          menubar = jif::LayoutManager::GetMenuBar("main");
+          layout = jif::LayoutManager::GetLayout("default");
+        }
       });
 
   glewInit();
@@ -84,23 +87,15 @@ int main(int argc, char **argv)
 
   while (window.Spin())
   {
-    if (reload)
-    {
-      reload = false;
-      jif::LayoutManager::Init();
-      mainMenuBar = jif::LayoutManager::GetMenuBar("main");
-      defaultLayout = jif::LayoutManager::GetLayout("default");
-    }
-
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
     if (ImGui::BeginMainMenuBar())
     {
-      for (auto &menu : mainMenuBar->Menus)
+      for (auto &menu : menubar->Menus)
       {
-        auto menuid = menu.Name + "##" + mainMenuBar->Id + '.' + menu.Id;
+        auto menuid = menu.Name + "##" + menubar->Id + '.' + menu.Id;
         if (ImGui::BeginMenu(menuid.c_str()))
         {
           for (auto &item : menu.Items)
@@ -118,9 +113,9 @@ int main(int argc, char **argv)
 
     ImGui::DockSpaceOverViewport(NULL, ImGuiDockNodeFlags_PassthruCentralNode);
 
-    for (auto &view : defaultLayout->Views)
+    for (auto &view : layout->Views)
     {
-      auto viewid = view.Name + "##" + defaultLayout->Id + '.' + view.Id;
+      auto viewid = view.Name + "##" + layout->Id + '.' + view.Id;
       if (ImGui::Begin(viewid.c_str()))
       {
         ImGui::SetWindowSize({view.Width, view.Height}, ImGuiCond_FirstUseEver);
