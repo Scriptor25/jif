@@ -13,9 +13,38 @@
 
 #include <functional>
 #include <GLFW/glfw3.h>
+#include <map>
+#include <ostream>
+#include <string>
+#include <vector>
 
 namespace jif
 {
+    struct Shortcut
+    {
+        Shortcut()
+        {
+        }
+
+        Shortcut(const std::string &key, bool shift, bool ctrl, bool alt, bool super)
+            : Key(key), Shift(shift), Ctrl(ctrl), Alt(alt), Super(super)
+        {
+        }
+
+        std::string ToString() const;
+
+        static Shortcut Parse(const std::string &shortcut);
+
+        std::string Key;
+        bool Shift = false;
+        bool Ctrl = false;
+        bool Alt = false;
+        bool Super = false;
+    };
+
+    bool operator<(const Shortcut &a, const Shortcut &b);
+    std::ostream &operator<<(std::ostream &out, const Shortcut &shortcut);
+
     class Window
     {
     public:
@@ -32,7 +61,9 @@ namespace jif
         void Close() const;
 
         void Register(const std::function<void(int width, int height)> &callback);
-        void Register(const std::function<void(int key, int scancode, int action, int mods)> &callback);
+        void Register(const std::function<bool(int key, int scancode, int action, int mods)> &callback);
+
+        void Register(const std::string &shortcut, const std::function<void()> &callback);
 
     private:
         void SetSize(int width, int height);
@@ -43,11 +74,14 @@ namespace jif
         static void GLFWWindowSizeCallback(GLFWwindow *window, int width, int height);
         static void GLFWKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
+        static std::string GetKeyName(int key, int scancode);
+
     private:
         int m_Width, m_Height;
         GLFWwindow *m_GLFW;
 
         std::vector<std::function<void(int width, int height)>> m_WindowSizeCallbacks;
-        std::vector<std::function<void(int key, int scancode, int action, int mods)>> m_KeyCallbacks;
+        std::vector<std::function<bool(int key, int scancode, int action, int mods)>> m_KeyCallbacks;
+        std::map<Shortcut, std::function<void()>> m_Shortcuts;
     };
 }

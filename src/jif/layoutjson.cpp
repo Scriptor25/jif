@@ -184,7 +184,7 @@ std::ostream &jif::operator<<(std::ostream &out, const MenuBar &menubar)
 
 std::ostream &jif::operator<<(std::ostream &out, const View &view)
 {
-    return out << "{ Id: " << view.Id << ", Name: " << view.Name << ", View: " << view.ViewType << ", Extra: " << view.Extra << " }";
+    return out << "{ Id: " << view.Id << ", Name: " << view.Name << ", View: " << view.ViewType << " }";
 }
 
 std::ostream &jif::operator<<(std::ostream &out, const ViewLayout &layout)

@@ -9,8 +9,63 @@
  */
 
 #include <cstdarg>
+#include <iostream>
 #include <jif/window.h>
+#include <sstream>
 #include <stb/stb_image.h>
+#include <string>
+
+std::string jif::Shortcut::ToString() const
+{
+    return std::string(Ctrl ? "ctrl+" : "") + std::string(Alt ? "alt+" : "") + std::string(Shift ? "shift+" : "") + std::string(Super ? "super+" : "") + Key;
+}
+
+jif::Shortcut jif::Shortcut::Parse(const std::string &shortcut)
+{
+    std::stringstream stream(shortcut);
+    std::string segment;
+
+    Shortcut sc;
+    while (std::getline(stream, segment, '+'))
+    {
+        if (segment == "shift")
+        {
+            sc.Shift = true;
+            continue;
+        }
+        if (segment == "ctrl")
+        {
+            sc.Ctrl = true;
+            continue;
+        }
+        if (segment == "alt")
+        {
+            sc.Alt = true;
+            continue;
+        }
+        if (segment == "super")
+        {
+            sc.Super = true;
+            continue;
+        }
+
+        sc.Key = segment;
+    }
+
+    return sc;
+}
+
+bool jif::operator<(const Shortcut &a, const Shortcut &b)
+{
+    auto astr = a.ToString();
+    auto bstr = b.ToString();
+    return astr < bstr;
+}
+
+std::ostream &jif::operator<<(std::ostream &out, const Shortcut &shortcut)
+{
+    return out << shortcut.ToString();
+}
 
 jif::Window::Window(int width, int height, const char *title, const char *iconname)
 {
@@ -81,9 +136,21 @@ void jif::Window::Register(const std::function<void(int width, int height)> &cal
     m_WindowSizeCallbacks.push_back(callback);
 }
 
-void jif::Window::Register(const std::function<void(int key, int scancode, int action, int mods)> &callback)
+void jif::Window::Register(const std::function<bool(int key, int scancode, int action, int mods)> &callback)
 {
     m_KeyCallbacks.push_back(callback);
+}
+
+void jif::Window::Register(const std::string &shortcut, const std::function<void()> &callback)
+{
+    std::stringstream stream(shortcut);
+    std::string segment;
+
+    while (std::getline(stream, segment, '|'))
+    {
+        auto sc = Shortcut::Parse(segment);
+        m_Shortcuts[sc] = callback;
+    }
 }
 
 void jif::Window::SetSize(int width, int height)
@@ -133,9 +200,37 @@ void jif::Window::GLFWKeyCallback(GLFWwindow *window, int key, int scancode, int
 {
     auto self = (Window *)glfwGetWindowUserPointer(window);
 
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
-        self->Close();
+    if (action == GLFW_RELEASE)
+    {
+        bool shift = (mods & GLFW_MOD_SHIFT) != 0;
+        bool ctrl = (mods & GLFW_MOD_CONTROL) != 0;
+        bool alt = (mods & GLFW_MOD_ALT) != 0;
+        bool super = (mods & GLFW_MOD_SUPER) != 0;
+
+        Shortcut sc(GetKeyName(key, scancode), shift, ctrl, alt, super);
+        if (auto scf = self->m_Shortcuts[sc])
+        {
+            scf();
+            return;
+        }
+    }
 
     for (auto callback : self->m_KeyCallbacks)
-        callback(key, scancode, action, mods);
+        if (callback(key, scancode, action, mods))
+            return;
+}
+
+std::string jif::Window::GetKeyName(int key, int scancode)
+{
+    if (auto str = glfwGetKeyName(key, scancode))
+        return str;
+
+    switch (key)
+    {
+    case GLFW_KEY_ESCAPE:
+        return "esc";
+
+    default:
+        return "";
+    }
 }

@@ -11,10 +11,18 @@
 #pragma once
 
 #include <filesystem>
+#include <map>
+#include <ostream>
 #include <string>
+#include <vector>
 
 namespace jif
 {
     void UnpackJIF(const std::filesystem::path &srcjif, const std::filesystem::path &dstdir);
     void PackJIF(const std::filesystem::path &srcdir, const std::filesystem::path &dstjif);
+
+    template <typename T>
+    std::ostream &operator<<(std::ostream &out, const std::vector<T> &vec);
+    template <typename K, typename V>
+    std::ostream &operator<<(std::ostream &out, const std::map<K, V> &map);
 }

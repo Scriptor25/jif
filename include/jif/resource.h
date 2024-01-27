@@ -105,7 +105,6 @@ namespace jif
         std::string Id;
         std::string Name;
         std::string ViewType;
-        std::map<std::string, std::string> Extra;
     };
     typedef std::shared_ptr<View> ViewPtr;
 
@@ -152,11 +151,6 @@ namespace jif
         std::map<std::string, FontPtr> m_Fonts;
         std::map<LayoutType, std::map<std::string, LayoutPtr>> m_Layouts;
     };
-
-    template <typename T>
-    std::ostream &operator<<(std::ostream &out, const std::vector<T> &vec);
-    template <typename K, typename V>
-    std::ostream &operator<<(std::ostream &out, const std::map<K, V> &map);
 
     std::ostream &operator<<(std::ostream &out, const MenuItem &menuitem);
     std::ostream &operator<<(std::ostream &out, const Menu &menu);

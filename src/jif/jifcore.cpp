@@ -30,9 +30,8 @@ int main(int argc, char **argv)
   (void)argv;
 
   jif::ResourceManager resources(argv[0]);
-  jif::JIFManager jifmgr;
+  jif::JIFManager manager(resources, "default");
   auto menubar = resources.GetMenuBar("main");
-  auto layout = resources.GetViewLayout("default");
 
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
@@ -41,7 +40,7 @@ int main(int argc, char **argv)
   window.MakeCurrent();
 
   window.Register(
-      [&menubar, &layout, &resources](int key, int scancode, int action, int mods)
+      [&resources, &manager, &menubar](int key, int scancode, int action, int mods)
       {
         (void)scancode;
         (void)mods;
@@ -49,9 +48,12 @@ int main(int argc, char **argv)
         if (key == GLFW_KEY_R && action == GLFW_RELEASE)
         {
           resources.ScanResources();
+          manager = jif::JIFManager(resources, "default");
           menubar = resources.GetMenuBar("main");
-          layout = resources.GetViewLayout("default");
+          return true;
         }
+
+        return false;
       });
 
   glewInit();
@@ -72,26 +74,32 @@ int main(int argc, char **argv)
 
       {"file.exit", [&window]()
        { window.Close(); }},
-      {"view.add", []()
-       { printf("TODO: show add view wizard\n"); }},
-      {"view.manager", []()
-       { printf("TODO: show view manager\n"); }},
+      {"view.add", [&manager]()
+       { manager.OpenAddWizard(); }},
+      {"view.manager", [&manager]()
+       { manager.OpenViewManager(); }},
       {"layout.new", []()
        { printf("TODO: show new layout wizard\n"); }},
-      {"layout.save", [&jifmgr]()
-       { jifmgr.SaveLayout(); }},
-      {"layout.saveas", [&jifmgr]()
-       { jifmgr.OpenSaveWizard(); }},
+      {"layout.save", [&manager]()
+       { manager.SaveLayout(); }},
+      {"layout.saveas", [&manager]()
+       { manager.OpenSaveWizard(); }},
 
   };
+
+  for (auto &menustr : menubar->Menus)
+  {
+    auto menu = resources.GetMenu(menustr);
+    for (auto &item : menu->Items)
+      if (auto action = ACTIONS[item->Action])
+        window.Register(item->Alt, action);
+  }
 
   while (window.Spin())
   {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-
-    jifmgr.ShowSaveWizard();
 
     if (ImGui::BeginMainMenuBar())
     {
@@ -105,8 +113,8 @@ int main(int argc, char **argv)
           {
             auto itemid = item->Name + "##" + menuid + '.' + item->Id;
             if (ImGui::MenuItem(itemid.c_str(), item->Alt.c_str()))
-              if (ACTIONS.count(item->Action))
-                ACTIONS[item->Action]();
+              if (auto action = ACTIONS[item->Action])
+                action();
           }
           ImGui::EndMenu();
         }
@@ -116,9 +124,13 @@ int main(int argc, char **argv)
 
     ImGui::DockSpaceOverViewport(NULL, ImGuiDockNodeFlags_PassthruCentralNode);
 
-    for (auto &view : layout->Views)
+    manager.ShowSaveWizard();
+    manager.ShowAddWizard();
+    manager.ShowViewManager();
+
+    for (auto &view : manager.Views())
     {
-      auto viewid = view->Name + "##" + layout->Id + '.' + view->Id;
+      auto viewid = view.second->ImGuiID();
       if (ImGui::Begin(viewid.c_str()))
       {
       }
