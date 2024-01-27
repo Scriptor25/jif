@@ -1,7 +1,7 @@
 #include <iostream>
-#include <jif/layout.h>
+#include <jif/resource.h>
 
-void jif::LayoutManager::to_json(nlohmann::json &json, const MenuItem &menuitem)
+void jif::to_json(nlohmann::json &json, const MenuItem &menuitem)
 {
     json["type"] = "menuitem";
     json["id"] = menuitem.Id;
@@ -10,7 +10,7 @@ void jif::LayoutManager::to_json(nlohmann::json &json, const MenuItem &menuitem)
     json["action"] = menuitem.Action;
 }
 
-void jif::LayoutManager::to_json(nlohmann::json &json, const Menu &menu)
+void jif::to_json(nlohmann::json &json, const Menu &menu)
 {
     json["type"] = "menu";
     json["id"] = menu.Id;
@@ -18,23 +18,22 @@ void jif::LayoutManager::to_json(nlohmann::json &json, const Menu &menu)
     json["items"] = menu.Items;
 }
 
-void jif::LayoutManager::to_json(nlohmann::json &json, const MenuBar &menubar)
+void jif::to_json(nlohmann::json &json, const MenuBar &menubar)
 {
     json["type"] = "menubar";
     json["id"] = menubar.Id;
     json["menus"] = menubar.Menus;
 }
 
-void jif::LayoutManager::to_json(nlohmann::json &json, const View &view)
+void jif::to_json(nlohmann::json &json, const View &view)
 {
     json["type"] = "view";
     json["id"] = view.Id;
     json["name"] = view.Name;
-    json["view"] = view.View;
-    json["extra"] = view.Extra;
+    json["viewtype"] = view.ViewType;
 }
 
-void jif::LayoutManager::to_json(nlohmann::json &json, const Layout &layout)
+void jif::to_json(nlohmann::json &json, const ViewLayout &layout)
 {
     json["type"] = "layout";
     json["id"] = layout.Id;
@@ -42,7 +41,32 @@ void jif::LayoutManager::to_json(nlohmann::json &json, const Layout &layout)
     json["views"] = layout.Views;
 }
 
-void jif::LayoutManager::from_json(const nlohmann::json &json, MenuItem &menuitem)
+void jif::to_json(nlohmann::json &json, const MenuItemPtr &menuitem)
+{
+    to_json(json, *menuitem);
+}
+
+void jif::to_json(nlohmann::json &json, const MenuPtr &menu)
+{
+    to_json(json, *menu);
+}
+
+void jif::to_json(nlohmann::json &json, const MenuBarPtr &menubar)
+{
+    to_json(json, *menubar);
+}
+
+void jif::to_json(nlohmann::json &json, const ViewPtr &view)
+{
+    to_json(json, *view);
+}
+
+void jif::to_json(nlohmann::json &json, const ViewLayoutPtr &layout)
+{
+    to_json(json, *layout);
+}
+
+void jif::from_json(const nlohmann::json &json, MenuItem &menuitem)
 {
     menuitem.Id = json["id"];
     menuitem.Name = json["name"];
@@ -50,32 +74,61 @@ void jif::LayoutManager::from_json(const nlohmann::json &json, MenuItem &menuite
     menuitem.Action = json["action"];
 }
 
-void jif::LayoutManager::from_json(const nlohmann::json &json, Menu &menu)
+void jif::from_json(const nlohmann::json &json, Menu &menu)
 {
     menu.Id = json["id"];
     menu.Name = json["name"];
     menu.Items = json["items"];
 }
 
-void jif::LayoutManager::from_json(const nlohmann::json &json, MenuBar &menubar)
+void jif::from_json(const nlohmann::json &json, MenuBar &menubar)
 {
     menubar.Id = json["id"];
     menubar.Menus = json["menus"];
 }
 
-void jif::LayoutManager::from_json(const nlohmann::json &json, View &view)
+void jif::from_json(const nlohmann::json &json, View &view)
 {
     view.Id = json["id"];
     view.Name = json["name"];
-    view.View = json["view"];
-    view.Extra = json["extra"];
+    view.ViewType = json["viewtype"];
 }
 
-void jif::LayoutManager::from_json(const nlohmann::json &json, Layout &layout)
+void jif::from_json(const nlohmann::json &json, ViewLayout &layout)
 {
     layout.Id = json["id"];
     layout.Name = json["name"];
     layout.Views = json["views"];
+}
+
+void jif::from_json(const nlohmann::json &json, MenuItemPtr &menuitem)
+{
+    menuitem = std::make_shared<MenuItem>();
+    from_json(json, *menuitem);
+}
+
+void jif::from_json(const nlohmann::json &json, MenuPtr &menu)
+{
+    menu = std::make_shared<Menu>();
+    from_json(json, *menu);
+}
+
+void jif::from_json(const nlohmann::json &json, MenuBarPtr &menubar)
+{
+    menubar = std::make_shared<MenuBar>();
+    from_json(json, *menubar);
+}
+
+void jif::from_json(const nlohmann::json &json, ViewPtr &view)
+{
+    view = std::make_shared<View>();
+    from_json(json, *view);
+}
+
+void jif::from_json(const nlohmann::json &json, ViewLayoutPtr &layout)
+{
+    layout = std::make_shared<ViewLayout>();
+    from_json(json, *layout);
 }
 
 template <typename T>
@@ -114,11 +167,6 @@ std::ostream &jif::operator<<(std::ostream &out, const std::map<K, V> &map)
     return out << " }";
 }
 
-std::ostream &jif::operator<<(std::ostream &out, const LayoutManager &mgr)
-{
-    return mgr >> out;
-}
-
 std::ostream &jif::operator<<(std::ostream &out, const MenuItem &menuitem)
 {
     return out << "{ Id: " << menuitem.Id << ", Name: " << menuitem.Name << ", Alt: " << menuitem.Alt << ", Action: " << menuitem.Action << " }";
@@ -136,60 +184,10 @@ std::ostream &jif::operator<<(std::ostream &out, const MenuBar &menubar)
 
 std::ostream &jif::operator<<(std::ostream &out, const View &view)
 {
-    return out << "{ Id: " << view.Id << ", Name: " << view.Name << ", View: " << view.View << ", Extra: " << view.Extra << " }";
+    return out << "{ Id: " << view.Id << ", Name: " << view.Name << ", View: " << view.ViewType << ", Extra: " << view.Extra << " }";
 }
 
-std::ostream &jif::operator<<(std::ostream &out, const Layout &layout)
+std::ostream &jif::operator<<(std::ostream &out, const ViewLayout &layout)
 {
     return out << "{ Id: " << layout.Id << ", Name: " << layout.Name << ", Views: " << layout.Views << " }";
-}
-
-void jif::to_json(nlohmann::json &json, const MenuItem &menuitem)
-{
-    LayoutManager::to_json(json, menuitem);
-}
-
-void jif::to_json(nlohmann::json &json, const Menu &menu)
-{
-    LayoutManager::to_json(json, menu);
-}
-
-void jif::to_json(nlohmann::json &json, const MenuBar &menubar)
-{
-    LayoutManager::to_json(json, menubar);
-}
-
-void jif::to_json(nlohmann::json &json, const View &view)
-{
-    LayoutManager::to_json(json, view);
-}
-
-void jif::to_json(nlohmann::json &json, const Layout &layout)
-{
-    LayoutManager::to_json(json, layout);
-}
-
-void jif::from_json(const nlohmann::json &json, MenuItem &menuitem)
-{
-    LayoutManager::from_json(json, menuitem);
-}
-
-void jif::from_json(const nlohmann::json &json, Menu &menu)
-{
-    LayoutManager::from_json(json, menu);
-}
-
-void jif::from_json(const nlohmann::json &json, MenuBar &menubar)
-{
-    LayoutManager::from_json(json, menubar);
-}
-
-void jif::from_json(const nlohmann::json &json, View &view)
-{
-    LayoutManager::from_json(json, view);
-}
-
-void jif::from_json(const nlohmann::json &json, Layout &layout)
-{
-    LayoutManager::from_json(json, layout);
 }

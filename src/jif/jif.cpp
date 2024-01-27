@@ -1,5 +1,5 @@
 #include <iostream>
-#include <jif/jiffile.h>
+#include <jif/jif.h>
 #include <kubazip/zip.h>
 
 void jif::UnpackJIF(const std::filesystem::path &srcjif, const std::filesystem::path &dstdir)

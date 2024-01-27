@@ -2,9 +2,9 @@
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <iostream>
-#include <jif/jifmanager.h>
-#include <jif/jiffile.h>
-#include <jif/layout.h>
+#include <jif/jif.h>
+#include <jif/manager.h>
+#include <jif/resource.h>
 
 void jif::JIFManager::CreateView(const std::string &label, JIFViewType type)
 {
@@ -22,15 +22,15 @@ void jif::JIFManager::SaveLayout()
         return;
     }
 
-    Layout layout;
+    ViewLayout layout;
     layout.Id = m_LayoutID;
     layout.Name = m_LayoutName;
     for (auto &v : m_Views)
     {
-        View view;
-        view.Id = v.second->ImGuiID();
-        view.Name = v.second->Label();
-        view.View = ToString(v.second->Type());
+        auto view = std::make_shared<View>();
+        view->Id = v.second->ImGuiID();
+        view->Name = v.second->Label();
+        view->ViewType = ToString(v.second->Type());
         layout.Views.push_back(view);
     }
 

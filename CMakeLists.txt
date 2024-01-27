@@ -16,7 +16,15 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 
-file(GLOB jif_src CONFIGURE_DEPENDS "src/jif/*.cpp" "src/jif/layout/*.cpp" "src/imgui/*.cpp" "src/imgui/backends/*.cpp" "src/imgui/misc/*.cpp" "src/kubazip/*.c")
+file(GLOB jif_src CONFIGURE_DEPENDS
+  "src/jif/*.cpp"
+
+  "src/imgui/*.cpp"
+  "src/imgui/backends/*.cpp"
+  "src/imgui/misc/*.cpp"
+  
+  "src/kubazip/*.c"
+)
 
 add_executable(jif-core ${jif_src})
 target_include_directories(jif-core PUBLIC
@@ -30,11 +38,15 @@ target_link_libraries(jif-core
   glfw
 )
 
-install(TARGETS jif-core
-  DESTINATION lib/${PROJECT_NAME})
+install(
+  TARGETS jif-core
+  DESTINATION lib/${PROJECT_NAME}
+)
 
-install(FILES $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>
-  DESTINATION lib/${PROJECT_NAME})
+install(
+  FILES $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

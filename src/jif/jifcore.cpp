@@ -15,8 +15,7 @@
 #include <imgui/imgui.h>
 #include <iostream>
 #include <jif/jif.h>
-#include <jif/jifmanager.h>
-#include <jif/layout.h>
+#include <jif/manager.h>
 #include <jif/resource.h>
 #include <jif/window.h>
 
@@ -30,29 +29,28 @@ int main(int argc, char **argv)
   (void)argc;
   (void)argv;
 
-  jif::ResourceManager::Init(argv[0]);
-  jif::LayoutManager layoutmgr;
+  jif::ResourceManager resources(argv[0]);
   jif::JIFManager jifmgr;
-  auto menubar = layoutmgr.GetMenuBar("main");
-  auto layout = layoutmgr.GetLayout("default");
+  auto menubar = resources.GetMenuBar("main");
+  auto layout = resources.GetViewLayout("default");
 
   glfwSetErrorCallback(glfw_error_callback);
   glfwInit();
 
-  jif::Window window(800, 600, "JIF GUI", jif::ResourceManager::GetResource("drawable/icon.png").c_str());
+  jif::Window window(800, 600, "JIF GUI", resources.GetResource("drawable/icon.png").c_str());
   window.MakeCurrent();
 
   window.Register(
-      [&menubar, &layout, &layoutmgr](int key, int scancode, int action, int mods)
+      [&menubar, &layout, &resources](int key, int scancode, int action, int mods)
       {
         (void)scancode;
         (void)mods;
 
         if (key == GLFW_KEY_R && action == GLFW_RELEASE)
         {
-          layoutmgr.Reinit();
-          menubar = layoutmgr.GetMenuBar("main");
-          layout = layoutmgr.GetLayout("default");
+          resources.ScanResources();
+          menubar = resources.GetMenuBar("main");
+          layout = resources.GetViewLayout("default");
         }
       });
 
@@ -99,16 +97,16 @@ int main(int argc, char **argv)
     {
       for (auto &menustr : menubar->Menus)
       {
-        auto menu = layoutmgr.GetMenu(menustr);
+        auto menu = resources.GetMenu(menustr);
         auto menuid = menu->Name + "##" + menubar->Id + '.' + menu->Id;
         if (ImGui::BeginMenu(menuid.c_str()))
         {
           for (auto &item : menu->Items)
           {
-            auto itemid = item.Name + "##" + menuid + '.' + item.Id;
-            if (ImGui::MenuItem(itemid.c_str(), item.Alt.c_str()))
-              if (ACTIONS.count(item.Action))
-                ACTIONS[item.Action]();
+            auto itemid = item->Name + "##" + menuid + '.' + item->Id;
+            if (ImGui::MenuItem(itemid.c_str(), item->Alt.c_str()))
+              if (ACTIONS.count(item->Action))
+                ACTIONS[item->Action]();
           }
           ImGui::EndMenu();
         }
@@ -120,7 +118,7 @@ int main(int argc, char **argv)
 
     for (auto &view : layout->Views)
     {
-      auto viewid = view.Name + "##" + layout->Id + '.' + view.Id;
+      auto viewid = view->Name + "##" + layout->Id + '.' + view->Id;
       if (ImGui::Begin(viewid.c_str()))
       {
       }

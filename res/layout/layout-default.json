@@ -1,5 +1,5 @@
 {
-    "type": "layout",
+    "type": "viewlayout",
     "id": "default",
     "name": "Default Layout",
     "views": [
@@ -7,23 +7,13 @@
             "type": "view",
             "id": "0",
             "name": "Demo",
-            "view": "demo",
-            "x": 50,
-            "y": 50,
-            "width": 100,
-            "height": 300,
-            "extra": {}
+            "viewtype": "demo"
         },
         {
             "type": "view",
             "id": "1",
             "name": "Help",
-            "view": "help",
-            "x": 80,
-            "y": 60,
-            "width": 80,
-            "height": 200,
-            "extra": {}
+            "viewtype": "help"
         }
     ]
 }
