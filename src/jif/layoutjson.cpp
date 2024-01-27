@@ -101,6 +101,23 @@ void jif::from_json(const nlohmann::json &json, ViewLayout &layout)
     layout.Views = json["views"];
 }
 
+void jif::from_json(const nlohmann::json &json, ViewType &viewtype)
+{
+    viewtype.Id = json["id"];
+    viewtype.Elements = json["elements"];
+}
+
+void jif::from_json(const nlohmann::json &json, ElementText &element)
+{
+    element.Text = json["text"];
+}
+
+void jif::from_json(const nlohmann::json &json, ElementButton &element)
+{
+    element.Text = json["text"];
+    element.Action = json["action"];
+}
+
 void jif::from_json(const nlohmann::json &json, MenuItemPtr &menuitem)
 {
     menuitem = std::make_shared<MenuItem>();
@@ -129,6 +146,31 @@ void jif::from_json(const nlohmann::json &json, ViewLayoutPtr &layout)
 {
     layout = std::make_shared<ViewLayout>();
     from_json(json, *layout);
+}
+
+void jif::from_json(const nlohmann::json &json, ViewTypePtr &viewtype)
+{
+    viewtype = std::make_shared<ViewType>();
+    from_json(json, *viewtype);
+}
+
+void jif::from_json(const nlohmann::json &json, ViewTypeElementPtr &element)
+{
+    std::string type = json["type"];
+    if (type == "text")
+    {
+        auto elem = std::make_shared<ElementText>();
+        from_json(json, *elem);
+        element = elem;
+        return;
+    }
+    if (type == "button")
+    {
+        auto elem = std::make_shared<ElementButton>();
+        from_json(json, *elem);
+        element = elem;
+        return;
+    }
 }
 
 template <typename T>

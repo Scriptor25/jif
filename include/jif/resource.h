@@ -44,30 +44,36 @@ namespace jif
     };
     typedef std::shared_ptr<Font> FontPtr;
 
-    enum LayoutType
+    enum ResourceType
     {
-        LayoutType_Error,
-        LayoutType_MenuItem,
-        LayoutType_Menu,
-        LayoutType_MenuBar,
-        LayoutType_View,
-        LayoutType_ViewLayout,
+        ResourceType_Error,
+
+        ResourceType_Drawable,
+        ResourceType_Font,
+
+        ResourceType_Layout_MenuItem,
+        ResourceType_Layout_Menu,
+        ResourceType_Layout_MenuBar,
+        ResourceType_Layout_View,
+        ResourceType_Layout_ViewLayout,
+
+        ResourceType_ViewType,
     };
 
-    LayoutType ToType(const std::string &type);
+    ResourceType ToType(const std::string &type);
 
     struct Layout
     {
         virtual ~Layout() {}
         virtual std::string GetID() const = 0;
-        virtual LayoutType GetType() const = 0;
+        virtual ResourceType GetType() const = 0;
     };
     typedef std::shared_ptr<Layout> LayoutPtr;
 
     struct MenuItem : Layout
     {
         std::string GetID() const override { return Id; }
-        LayoutType GetType() const override { return LayoutType_MenuItem; }
+        ResourceType GetType() const override { return ResourceType_Layout_MenuItem; }
 
         std::string Id;
         std::string Name;
@@ -79,7 +85,7 @@ namespace jif
     struct Menu : Layout
     {
         std::string GetID() const override { return Id; }
-        LayoutType GetType() const override { return LayoutType_Menu; }
+        ResourceType GetType() const override { return ResourceType_Layout_Menu; }
 
         std::string Id;
         std::string Name;
@@ -90,7 +96,7 @@ namespace jif
     struct MenuBar : Layout
     {
         std::string GetID() const override { return Id; }
-        LayoutType GetType() const override { return LayoutType_MenuBar; }
+        ResourceType GetType() const override { return ResourceType_Layout_MenuBar; }
 
         std::string Id;
         std::vector<std::string> Menus;
@@ -100,7 +106,7 @@ namespace jif
     struct View : Layout
     {
         std::string GetID() const override { return Id; }
-        LayoutType GetType() const override { return LayoutType_View; }
+        ResourceType GetType() const override { return ResourceType_Layout_View; }
 
         std::string Id;
         std::string Name;
@@ -111,7 +117,7 @@ namespace jif
     struct ViewLayout : Layout
     {
         std::string GetID() const override { return Id; }
-        LayoutType GetType() const override { return LayoutType_ViewLayout; }
+        ResourceType GetType() const override { return ResourceType_Layout_ViewLayout; }
 
         std::string Id;
         std::string Name;
@@ -119,8 +125,38 @@ namespace jif
     };
     typedef std::shared_ptr<ViewLayout> ViewLayoutPtr;
 
-    typedef std::shared_ptr<std::ifstream> IFStreamPtr;
+    struct ViewTypeElement
+    {
+        virtual ~ViewTypeElement() {}
+        virtual void Show() const = 0;
+    };
+    typedef std::shared_ptr<ViewTypeElement> ViewTypeElementPtr;
 
+    struct ElementText : ViewTypeElement
+    {
+        void Show() const override;
+
+        std::string Text;
+    };
+    typedef std::shared_ptr<ElementText> ElementTextPtr;
+
+    struct ElementButton : ViewTypeElement
+    {
+        void Show() const override;
+
+        std::string Text;
+        std::string Action;
+    };
+    typedef std::shared_ptr<ElementButton> ElementButtonPtr;
+
+    struct ViewType
+    {
+        std::string Id;
+        std::vector<ViewTypeElementPtr> Elements;
+    };
+    typedef std::shared_ptr<ViewType> ViewTypePtr;
+
+    typedef std::shared_ptr<std::ifstream> IFStreamPtr;
     class ResourceManager
     {
     public:
@@ -133,23 +169,30 @@ namespace jif
 
         const DrawablePtr &GetDrawable(const std::string &id) { return m_Drawables[id]; }
         const FontPtr &GetFont(const std::string &id) { return m_Fonts[id]; }
-        const LayoutPtr &GetLayout(LayoutType type, const std::string &id) { return m_Layouts[type][id]; }
+        const LayoutPtr &GetLayout(ResourceType type, const std::string &id) { return m_Layouts[type][id]; }
+        const ViewTypePtr &GetViewType(const std::string &id) { return m_ViewTypes[id]; }
 
-        const MenuItemPtr GetMenuItem(const std::string &id) { return std::dynamic_pointer_cast<MenuItem>(m_Layouts[LayoutType_MenuItem][id]); }
-        const MenuPtr GetMenu(const std::string &id) { return std::dynamic_pointer_cast<Menu>(m_Layouts[LayoutType_Menu][id]); }
-        const MenuBarPtr GetMenuBar(const std::string &id) { return std::dynamic_pointer_cast<MenuBar>(m_Layouts[LayoutType_MenuBar][id]); }
-        const ViewPtr GetView(const std::string &id) { return std::dynamic_pointer_cast<View>(m_Layouts[LayoutType_View][id]); }
-        const ViewLayoutPtr GetViewLayout(const std::string &id) { return std::dynamic_pointer_cast<ViewLayout>(m_Layouts[LayoutType_ViewLayout][id]); }
+        const MenuItemPtr GetMenuItem(const std::string &id) { return std::dynamic_pointer_cast<MenuItem>(m_Layouts[ResourceType_Layout_MenuItem][id]); }
+        const MenuPtr GetMenu(const std::string &id) { return std::dynamic_pointer_cast<Menu>(m_Layouts[ResourceType_Layout_Menu][id]); }
+        const MenuBarPtr GetMenuBar(const std::string &id) { return std::dynamic_pointer_cast<MenuBar>(m_Layouts[ResourceType_Layout_MenuBar][id]); }
+        const ViewPtr GetView(const std::string &id) { return std::dynamic_pointer_cast<View>(m_Layouts[ResourceType_Layout_View][id]); }
+        const ViewLayoutPtr GetViewLayout(const std::string &id) { return std::dynamic_pointer_cast<ViewLayout>(m_Layouts[ResourceType_Layout_ViewLayout][id]); }
+
+        static void Action(const std::string &id);
 
     private:
         void ScanDir(const std::filesystem::path &dir);
+
+    public:
+        static std::map<std::string, std::function<void()>> ACTIONS;
 
     private:
         std::filesystem::path m_Root;
 
         std::map<std::string, DrawablePtr> m_Drawables;
         std::map<std::string, FontPtr> m_Fonts;
-        std::map<LayoutType, std::map<std::string, LayoutPtr>> m_Layouts;
+        std::map<ResourceType, std::map<std::string, LayoutPtr>> m_Layouts;
+        std::map<std::string, ViewTypePtr> m_ViewTypes;
     };
 
     std::ostream &operator<<(std::ostream &out, const MenuItem &menuitem);
@@ -175,10 +218,15 @@ namespace jif
     void from_json(const nlohmann::json &json, MenuBar &menubar);
     void from_json(const nlohmann::json &json, View &view);
     void from_json(const nlohmann::json &json, ViewLayout &layout);
+    void from_json(const nlohmann::json &json, ViewType &viewtype);
+    void from_json(const nlohmann::json &json, ElementText &element);
+    void from_json(const nlohmann::json &json, ElementButton &element);
 
     void from_json(const nlohmann::json &json, MenuItemPtr &menuitem);
     void from_json(const nlohmann::json &json, MenuPtr &menu);
     void from_json(const nlohmann::json &json, MenuBarPtr &menubar);
     void from_json(const nlohmann::json &json, ViewPtr &view);
     void from_json(const nlohmann::json &json, ViewLayoutPtr &layout);
+    void from_json(const nlohmann::json &json, ViewTypePtr &viewtype);
+    void from_json(const nlohmann::json &json, ViewTypeElementPtr &element);
 }

@@ -1,5 +1,6 @@
 #include <fstream>
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <iostream>
 #include <jif/jif.h>
@@ -23,12 +24,13 @@ jif::JIFManager::JIFManager(ResourceManager &resources, const std::string &id)
     }
 }
 
-void jif::JIFManager::CreateView(const std::string &label, JIFViewType type)
+void jif::JIFManager::CreateView(const std::string &label, const std::string &type)
 {
     static size_t id = 0;
     while (m_Views.count(std::to_string(id++)))
         ;
-    m_Views[std::to_string(id)] = std::make_shared<JIFView>(std::to_string(id++), label, type);
+    m_Views[std::to_string(id)] = std::make_shared<JIFView>(std::to_string(id), label, type);
+    id++;
 }
 
 void jif::JIFManager::SaveLayout()
@@ -50,7 +52,7 @@ void jif::JIFManager::SaveLayout()
         auto view = std::make_shared<View>();
         view->Id = v.second->ImGuiID();
         view->Name = v.second->Label();
-        view->ViewType = ToString(v.second->Type());
+        view->ViewType = v.second->Type();
         layout->Views.push_back(view);
     }
 
@@ -65,7 +67,7 @@ void jif::JIFManager::SaveLayout()
         stream << json;
     }
 
-    std::filesystem::copy_file("imgui.ini", imguiini);
+    ImGui::SaveIniSettingsToDisk(imguiini.c_str());
 
     PackJIF("tmp", m_LayoutName + ".jif");
 
@@ -77,6 +79,11 @@ void jif::JIFManager::OpenSaveWizard()
     m_SaveWizardOpen = true;
     m_LayoutName.clear();
     m_LayoutID.clear();
+}
+
+void jif::JIFManager::OpenNewWizard()
+{
+    m_NewWizardOpen = true;
 }
 
 void jif::JIFManager::OpenAddWizard()
@@ -116,13 +123,25 @@ void jif::JIFManager::ShowSaveWizard()
     ImGui::End();
 }
 
+void jif::JIFManager::ShowNewWizard()
+{
+    if (!m_NewWizardOpen)
+        return;
+
+    if (ImGui::Begin("New Layout", &m_NewWizardOpen))
+    {
+    }
+    ImGui::End();
+}
+
 void jif::JIFManager::ShowAddWizard()
 {
     if (!m_AddWizardOpen)
         return;
 
     if (ImGui::Begin("Add View", &m_AddWizardOpen))
-        ;
+    {
+    }
     ImGui::End();
 }
 
@@ -132,55 +151,29 @@ void jif::JIFManager::ShowViewManager()
         return;
 
     if (ImGui::Begin("View Manager", &m_ViewManagerOpen))
-        ;
-    ImGui::End();
-}
-
-std::string jif::JIFManager::ToString(JIFViewType type)
-{
-    switch (type)
     {
-    case JIFViewType_Camera:
-        return "camera";
-    case JIFViewType_Debug:
-        return "debug";
-    case JIFViewType_Demo:
-        return "demo";
-    case JIFViewType_Graph:
-        return "graph";
-    case JIFViewType_Help:
-        return "help";
-    case JIFViewType_Joystick:
-        return "joystick";
-    case JIFViewType_Terminal:
-        return "terminal";
-    default:
-        return "error";
+        std::vector<std::string> markedForRemoval;
+        for (auto &entry : m_Views)
+        {
+            auto &view = entry.second;
+            ImGui::Checkbox(view->ImGuiID().c_str(), &view->IsOpen());
+            ImGui::SameLine();
+            auto buttonid = "Remove##" + view->ImGuiID();
+            if (ImGui::Button(buttonid.c_str()))
+                markedForRemoval.push_back(entry.first);
+        }
+
+        for (auto &key : markedForRemoval)
+        {
+            auto &view = m_Views[key];
+            ImGui::ClearWindowSettings(view->ImGuiID().c_str());
+            m_Views.erase(key);
+        }
     }
-}
-
-jif::JIFViewType jif::JIFManager::ViewTypeFromString(const std::string &type)
-{
-    if (type == "camera")
-        return JIFViewType_Camera;
-    if (type == "debug")
-        return JIFViewType_Debug;
-    if (type == "demo")
-        return JIFViewType_Demo;
-    if (type == "graph")
-        return JIFViewType_Graph;
-    if (type == "help")
-        return JIFViewType_Help;
-    if (type == "joystick")
-        return JIFViewType_Joystick;
-    if (type == "terminal")
-        return JIFViewType_Terminal;
-
-    return JIFViewType_Error;
+    ImGui::End();
 }
 
 void jif::JIFManager::AddView(const std::string &id, const std::string &name, const std::string &type)
 {
-    auto ttype = ViewTypeFromString(type);
-    m_Views[id] = std::make_shared<JIFView>(id, name, ttype);
+    m_Views[id] = std::make_shared<JIFView>(id, name, type);
 }

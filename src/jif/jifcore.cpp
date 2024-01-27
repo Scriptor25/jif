@@ -70,28 +70,28 @@ int main(int argc, char **argv)
   ImGui_ImplGlfw_InitForOpenGL(window.GetGLFW(), true);
   ImGui_ImplOpenGL3_Init();
 
-  std::map<std::string, std::function<void()>> ACTIONS{
+  auto &actions = jif::ResourceManager::ACTIONS;
 
-      {"file.exit", [&window]()
-       { window.Close(); }},
-      {"view.add", [&manager]()
-       { manager.OpenAddWizard(); }},
-      {"view.manager", [&manager]()
-       { manager.OpenViewManager(); }},
-      {"layout.new", []()
-       { printf("TODO: show new layout wizard\n"); }},
-      {"layout.save", [&manager]()
-       { manager.SaveLayout(); }},
-      {"layout.saveas", [&manager]()
-       { manager.OpenSaveWizard(); }},
-
-  };
+  actions["file.exit"] = [&window]()
+  { window.Close(); };
+  actions["view.add"] = [&manager]()
+  { manager.OpenAddWizard(); };
+  actions["view.manager"] = [&manager]()
+  { manager.OpenViewManager(); };
+  actions["layout.new"] = [&manager]()
+  { manager.OpenNewWizard(); };
+  actions["layout.save"] = [&manager]()
+  { manager.SaveLayout(); };
+  actions["layout.saveas"] = [&manager]()
+  { manager.OpenSaveWizard(); };
+  actions["demo.click"] = []()
+  { std::cout << "Hello World!" << std::endl; };
 
   for (auto &menustr : menubar->Menus)
   {
     auto menu = resources.GetMenu(menustr);
     for (auto &item : menu->Items)
-      if (auto action = ACTIONS[item->Action])
+      if (auto action = actions[item->Action])
         window.Register(item->Alt, action);
   }
 
@@ -113,8 +113,7 @@ int main(int argc, char **argv)
           {
             auto itemid = item->Name + "##" + menuid + '.' + item->Id;
             if (ImGui::MenuItem(itemid.c_str(), item->Alt.c_str()))
-              if (auto action = ACTIONS[item->Action])
-                action();
+              jif::ResourceManager::Action(item->Action);
           }
           ImGui::EndMenu();
         }
@@ -127,12 +126,19 @@ int main(int argc, char **argv)
     manager.ShowSaveWizard();
     manager.ShowAddWizard();
     manager.ShowViewManager();
+    manager.ShowNewWizard();
 
-    for (auto &view : manager.Views())
+    for (auto &entry : manager.Views())
     {
-      auto viewid = view.second->ImGuiID();
-      if (ImGui::Begin(viewid.c_str()))
+      auto &view = entry.second;
+      if (!view->IsOpen())
+        continue;
+      if (ImGui::Begin(view->ImGuiID().c_str(), &view->IsOpen()))
       {
+        auto type = resources.GetViewType(view->Type());
+        if (type)
+          for (auto &element : type->Elements)
+            element->Show();
       }
       ImGui::End();
     }

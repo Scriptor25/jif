@@ -8,23 +8,45 @@
  * ------------------------------------------------------------
  */
 
+#include <imgui/imgui.h>
 #include <iostream>
 #include <jif/resource.h>
 
-jif::LayoutType jif::ToType(const std::string &type)
-{
-    if (type == "menuitem")
-        return LayoutType_MenuItem;
-    if (type == "menu")
-        return LayoutType_Menu;
-    if (type == "menubar")
-        return LayoutType_MenuBar;
-    if (type == "view")
-        return LayoutType_View;
-    if (type == "viewlayout")
-        return LayoutType_ViewLayout;
+std::map<std::string, std::function<void()>> jif::ResourceManager::ACTIONS;
 
-    return LayoutType_Error;
+jif::ResourceType jif::ToType(const std::string &type)
+{
+    if (type == "drawable")
+        return ResourceType_Drawable;
+    if (type == "font")
+        return ResourceType_Font;
+
+    if (type == "menuitem")
+        return ResourceType_Layout_MenuItem;
+    if (type == "menu")
+        return ResourceType_Layout_Menu;
+    if (type == "menubar")
+        return ResourceType_Layout_MenuBar;
+    if (type == "view")
+        return ResourceType_Layout_View;
+    if (type == "viewlayout")
+        return ResourceType_Layout_ViewLayout;
+
+    if (type == "viewtype")
+        return ResourceType_ViewType;
+
+    return ResourceType_Error;
+}
+
+void jif::ElementText::Show() const
+{
+    ImGui::TextUnformatted(Text.c_str());
+}
+
+void jif::ElementButton::Show() const
+{
+    if (ImGui::Button(Text.c_str()))
+        ResourceManager::Action(Action);
 }
 
 jif::ResourceManager::ResourceManager(const std::filesystem::path &executable)
@@ -50,9 +72,18 @@ void jif::ResourceManager::ScanResources()
     m_Fonts.clear();
     m_Layouts.clear();
 
-    // ScanDir(GetResource("drawable"));
-    // ScanDir(GetResource("font"));
+    ScanDir(GetResource("drawable"));
+    ScanDir(GetResource("font"));
     ScanDir(GetResource("layout"));
+    ScanDir(GetResource("viewtype"));
+}
+
+void jif::ResourceManager::Action(const std::string &id)
+{
+    if (auto action = ACTIONS[id])
+        action();
+    else
+        std::cerr << "Undefined action '" << id << "'" << std::endl;
 }
 
 void jif::ResourceManager::ScanDir(const std::filesystem::path &dir)
@@ -84,35 +115,43 @@ void jif::ResourceManager::ScanDir(const std::filesystem::path &dir)
         std::string type = json["type"];
         std::string id = json["id"];
 
-        LayoutPtr ptr;
-        auto layouttype = ToType(type);
-        switch (layouttype)
+        auto resType = ToType(type);
+        switch (resType)
         {
-        case LayoutType_MenuItem:
-            ptr = json.get<MenuItemPtr>();
+        case ResourceType_Drawable:
             break;
 
-        case LayoutType_Menu:
-            ptr = json.get<MenuPtr>();
+        case ResourceType_Font:
             break;
 
-        case LayoutType_MenuBar:
-            ptr = json.get<MenuBarPtr>();
+        case ResourceType_Layout_MenuItem:
+            m_Layouts[resType][id] = json.get<MenuItemPtr>();
             break;
 
-        case LayoutType_View:
-            ptr = json.get<ViewPtr>();
+        case ResourceType_Layout_Menu:
+            m_Layouts[resType][id] = json.get<MenuPtr>();
             break;
 
-        case LayoutType_ViewLayout:
-            ptr = json.get<ViewLayoutPtr>();
+        case ResourceType_Layout_MenuBar:
+            m_Layouts[resType][id] = json.get<MenuBarPtr>();
             break;
 
-        case LayoutType_Error:
+        case ResourceType_Layout_View:
+            m_Layouts[resType][id] = json.get<ViewPtr>();
+            break;
+
+        case ResourceType_Layout_ViewLayout:
+            m_Layouts[resType][id] = json.get<ViewLayoutPtr>();
+            break;
+
+        case ResourceType_ViewType:
+            m_ViewTypes[id] = json.get<ViewTypePtr>();
+            break;
+
+        case ResourceType_Error:
         default:
             break;
         }
-        m_Layouts[layouttype][id] = ptr;
 
         stream.close();
     }

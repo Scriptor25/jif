@@ -17,31 +17,19 @@
 
 namespace jif
 {
-    enum JIFViewType
-    {
-        JIFViewType_Camera,
-        JIFViewType_Debug,
-        JIFViewType_Demo,
-        JIFViewType_Error,
-        JIFViewType_Graph,
-        JIFViewType_Help,
-        JIFViewType_Joystick,
-        JIFViewType_Terminal,
-    };
-
     class JIFView
     {
     public:
-        JIFView(std::string id, const std::string &label, JIFViewType type)
+        JIFView(std::string id, const std::string &label, const std::string &type)
             : m_ID(id), m_Label(label), m_Type(type)
         {
         }
 
         bool &IsOpen() { return m_IsOpen; }
         bool IsOpen() const { return m_IsOpen; }
-        std::string ID() const { return m_ID; }
-        std::string Label() const { return m_Label; }
-        JIFViewType Type() const { return m_Type; }
+        const std::string &ID() const { return m_ID; }
+        const std::string &Label() const { return m_Label; }
+        const std::string &Type() const { return m_Type; }
 
         std::string ImGuiID() const { return m_Label + "##view@" + m_ID; }
 
@@ -49,7 +37,7 @@ namespace jif
         bool m_IsOpen = true;
         std::string m_ID;
         std::string m_Label;
-        JIFViewType m_Type;
+        std::string m_Type;
     };
     typedef std::shared_ptr<JIFView> JIFViewPtr;
 
@@ -59,22 +47,23 @@ namespace jif
         JIFManager() {}
         JIFManager(ResourceManager &resources, const std::string &id);
 
-        void CreateView(const std::string &label, JIFViewType type);
+        void CreateView(const std::string &label, const std::string &type);
 
         std::map<std::string, JIFViewPtr> &Views() { return m_Views; }
 
         void SaveLayout();
 
         void OpenSaveWizard();
+        void OpenNewWizard();
+
         void OpenAddWizard();
         void OpenViewManager();
 
         void ShowSaveWizard();
+        void ShowNewWizard();
+
         void ShowAddWizard();
         void ShowViewManager();
-
-        static std::string ToString(JIFViewType type);
-        static JIFViewType ViewTypeFromString(const std::string &type);
 
     private:
         void AddView(const std::string &id, const std::string &name, const std::string &type);
@@ -82,8 +71,9 @@ namespace jif
     private:
         std::string m_LayoutID;
         std::string m_LayoutName;
-        bool m_SaveWizardOpen = false;
 
+        bool m_SaveWizardOpen = false;
+        bool m_NewWizardOpen = false;
         bool m_AddWizardOpen = false;
         bool m_ViewManagerOpen = false;
 

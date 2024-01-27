@@ -1,0 +1,15 @@
+{
+    "type": "viewtype",
+    "id": "demo",
+    "elements": [
+        {
+            "type": "text",
+            "text": "Hello World!"
+        },
+        {
+            "type": "button",
+            "text": "Click me",
+            "action": "demo.click"
+        }
+    ]
+}
