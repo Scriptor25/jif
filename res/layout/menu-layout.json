@@ -12,6 +12,13 @@
         },
         {
             "type": "menuitem",
+            "id": "layout.load",
+            "name": "Load",
+            "alt": "ctrl+l",
+            "action": "layout.load"
+        },
+        {
+            "type": "menuitem",
             "id": "layout.save",
             "name": "Save",
             "alt": "ctrl+s",

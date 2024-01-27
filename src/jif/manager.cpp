@@ -32,6 +32,8 @@ jif::JIFManager::JIFManager(ResourceManager &resources, const std::string &id)
         auto type = view->ViewType;
         AddView(id, name, type);
     }
+
+    m_Saved = true;
 }
 
 void jif::JIFManager::CreateView(const std::string &label, const std::string &type)
@@ -41,6 +43,8 @@ void jif::JIFManager::CreateView(const std::string &label, const std::string &ty
         ;
     m_Views[std::to_string(id)] = std::make_shared<JIFView>(std::to_string(id), label, type);
     id++;
+
+    m_Saved = false;
 }
 
 void jif::JIFManager::SaveLayout()
@@ -50,7 +54,7 @@ void jif::JIFManager::SaveLayout()
 
     if (m_LayoutName.empty() || m_LayoutID.empty())
     {
-        OpenSaveWizard();
+        OpenSaveLayoutWizard();
         return;
     }
 
@@ -82,23 +86,67 @@ void jif::JIFManager::SaveLayout()
     PackJIF("tmp", m_LayoutName + ".jif");
 
     std::filesystem::remove_all("tmp"); // delete tmp afterwards
+
+    m_Saved = true;
 }
 
-void jif::JIFManager::OpenSaveWizard()
+void jif::JIFManager::LoadLayout(const std::string &filename)
 {
-    m_SaveWizardOpen = true;
+    Reset();
+
+    std::filesystem::remove_all("tmp");
+    std::filesystem::create_directory("tmp");
+    std::filesystem::path layoutjson("tmp/layout.json");
+    std::filesystem::path imguiini("tmp/imgui.ini");
+
+    UnpackJIF(filename, "tmp");
+
+    std::ifstream stream(layoutjson);
+
+    nlohmann::json json;
+    stream >> json;
+
+    auto layout = json.get<ViewLayoutPtr>();
+    m_LayoutID = layout->Id;
+    m_LayoutName = layout->Name;
+    for (auto &view : layout->Views)
+    {
+        auto id = view->Id;
+        auto name = view->Name;
+        auto type = view->ViewType;
+        AddView(id, name, type);
+    }
+    m_Saved = true;
+
+    ImGui::LoadIniSettingsFromDisk(imguiini.c_str());
+
+    stream.close();
+
+    std::filesystem::remove_all("tmp");
+}
+
+void jif::JIFManager::OpenSaveLayoutWizard()
+{
+    m_SaveLayoutWizardOpen = true;
+    m_LayoutNameBkp = m_LayoutName;
+    m_LayoutIDBkp = m_LayoutID;
     m_LayoutName.clear();
     m_LayoutID.clear();
 }
 
-void jif::JIFManager::OpenNewWizard()
+void jif::JIFManager::OpenNewLayoutWizard()
 {
-    m_NewWizardOpen = true;
+    m_NewLayoutWizardOpen = true;
 }
 
-void jif::JIFManager::OpenAddWizard()
+void jif::JIFManager::OpenLoadLayoutWizard()
 {
-    m_AddWizardOpen = true;
+    m_LoadLayoutWizardOpen = true;
+}
+
+void jif::JIFManager::OpenAddViewWizard()
+{
+    m_AddViewWizardOpen = true;
 }
 
 void jif::JIFManager::OpenViewManager()
@@ -106,50 +154,105 @@ void jif::JIFManager::OpenViewManager()
     m_ViewManagerOpen = true;
 }
 
-void jif::JIFManager::ShowSaveWizard()
+void jif::JIFManager::ShowSaveLayoutWizard()
 {
-    if (!m_SaveWizardOpen)
+    if (!m_SaveLayoutWizardOpen)
         return;
 
-    if (ImGui::Begin("Save Layout", &m_SaveWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
+    if (ImGui::Begin("Save Layout", &m_SaveLayoutWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
     {
         ImGui::InputText("Name", &m_LayoutName);
         ImGui::InputText("ID", &m_LayoutID);
         ImGui::Separator();
         if (ImGui::Button("Save"))
         {
-            m_SaveWizardOpen = false;
+            m_SaveLayoutWizardOpen = false;
             m_Saved = false;
             SaveLayout();
         }
         ImGui::SameLine();
         if (ImGui::Button("Cancel"))
         {
-            m_SaveWizardOpen = false;
-            m_LayoutName.clear();
-            m_LayoutID.clear();
+            m_SaveLayoutWizardOpen = false;
+            m_LayoutName = m_LayoutNameBkp;
+            m_LayoutID = m_LayoutIDBkp;
         }
     }
     ImGui::End();
 }
 
-void jif::JIFManager::ShowNewWizard()
+void jif::JIFManager::ShowNewLayoutWizard()
 {
-    if (!m_NewWizardOpen)
+    if (!m_NewLayoutWizardOpen)
         return;
 
-    if (ImGui::Begin("New Layout", &m_NewWizardOpen))
+    if (m_Saved)
     {
+        m_NewLayoutWizardOpen = false;
+        Reset();
+        return;
+    }
+
+    if (ImGui::Begin("New Layout", &m_NewLayoutWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::TextUnformatted("You have unsaved changes in the current layout. Do you want to save before you proceed?");
+        if (ImGui::Button("Save"))
+        {
+            m_NewLayoutWizardOpen = false;
+            OpenSaveLayoutWizard();
+        }
+        if (ImGui::Button("Dont Save"))
+        {
+            m_NewLayoutWizardOpen = false;
+            Reset();
+        }
+        if (ImGui::Button("Cancel"))
+        {
+            m_NewLayoutWizardOpen = false;
+        }
     }
     ImGui::End();
 }
 
-void jif::JIFManager::ShowAddWizard()
+void jif::JIFManager::ShowLoadLayoutWizard()
 {
-    if (!m_AddWizardOpen)
+    static std::string filename;
+
+    if (!m_LoadLayoutWizardOpen)
         return;
 
-    if (ImGui::Begin("Add View", &m_AddWizardOpen))
+    if (!m_Saved)
+    {
+        OpenNewLayoutWizard();
+        return;
+    }
+
+    if (ImGui::Begin("Load Layout", &m_LoadLayoutWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::InputText("File Name", &filename);
+        ImGui::Separator();
+        if (ImGui::Button("Load"))
+        {
+            m_LoadLayoutWizardOpen = false;
+            LoadLayout(filename);
+            filename.clear();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel"))
+        {
+            m_LoadLayoutWizardOpen = false;
+            filename.clear();
+        }
+    }
+    ImGui::End();
+}
+
+void jif::JIFManager::ShowAddViewWizard()
+{
+    if (!m_AddViewWizardOpen)
+        return;
+
+    if (ImGui::Begin("Add View", &m_AddViewWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
     {
     }
     ImGui::End();
@@ -160,7 +263,7 @@ void jif::JIFManager::ShowViewManager()
     if (!m_ViewManagerOpen)
         return;
 
-    if (ImGui::Begin("View Manager", &m_ViewManagerOpen))
+    if (ImGui::Begin("View Manager", &m_ViewManagerOpen, ImGuiWindowFlags_AlwaysAutoResize))
     {
         std::vector<std::string> markedForRemoval;
         for (auto &entry : m_Views)
@@ -178,6 +281,7 @@ void jif::JIFManager::ShowViewManager()
             auto &view = m_Views[key];
             ImGui::ClearWindowSettings(view->ImGuiID().c_str());
             m_Views.erase(key);
+            m_Saved = false;
         }
     }
     ImGui::End();
@@ -186,4 +290,18 @@ void jif::JIFManager::ShowViewManager()
 void jif::JIFManager::AddView(const std::string &id, const std::string &name, const std::string &type)
 {
     m_Views[id] = std::make_shared<JIFView>(id, name, type);
+    m_Saved = false;
+}
+
+void jif::JIFManager::Reset()
+{
+    m_LayoutID.clear();
+    m_LayoutName.clear();
+    m_Saved = false;
+    for (auto &entry : m_Views)
+    {
+        auto &view = entry.second;
+        ImGui::ClearWindowSettings(view->ImGuiID().c_str());
+    }
+    m_Views.clear();
 }

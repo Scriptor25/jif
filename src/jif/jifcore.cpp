@@ -75,15 +75,17 @@ int main(int argc, char **argv)
   actions["file.exit"] = [&window]()
   { window.Close(); };
   actions["view.add"] = [&manager]()
-  { manager.OpenAddWizard(); };
+  { manager.OpenAddViewWizard(); };
   actions["view.manager"] = [&manager]()
   { manager.OpenViewManager(); };
   actions["layout.new"] = [&manager]()
-  { manager.OpenNewWizard(); };
+  { manager.OpenNewLayoutWizard(); };
+  actions["layout.load"] = [&manager]()
+  { manager.OpenLoadLayoutWizard(); };
   actions["layout.save"] = [&manager]()
   { manager.SaveLayout(); };
   actions["layout.saveas"] = [&manager]()
-  { manager.OpenSaveWizard(); };
+  { manager.OpenSaveLayoutWizard(); };
   actions["demo.click"] = []()
   { std::cout << "Hello World!" << std::endl; };
 
@@ -91,8 +93,8 @@ int main(int argc, char **argv)
   {
     auto menu = resources.GetMenu(menustr);
     for (auto &item : menu->Items)
-      if (auto action = actions[item->Action])
-        window.Register(item->Alt, action);
+      window.Register(item->Alt, [action = item->Action]()
+                      { jif::ResourceManager::Action(action); });
   }
 
   while (window.Spin())
@@ -123,10 +125,11 @@ int main(int argc, char **argv)
 
     ImGui::DockSpaceOverViewport(NULL, ImGuiDockNodeFlags_PassthruCentralNode);
 
-    manager.ShowSaveWizard();
-    manager.ShowAddWizard();
+    manager.ShowSaveLayoutWizard();
+    manager.ShowNewLayoutWizard();
+    manager.ShowLoadLayoutWizard();
+    manager.ShowAddViewWizard();
     manager.ShowViewManager();
-    manager.ShowNewWizard();
 
     for (auto &entry : manager.Views())
     {

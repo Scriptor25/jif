@@ -1,0 +1,30 @@
+{
+    "type": "viewtype",
+    "id": "help",
+    "elements": [
+        {
+            "type": "text",
+            "text": "Exit: File -> Exit"
+        },
+        {
+            "type": "text",
+            "text": "Add View: View -> Add"
+        },
+        {
+            "type": "text",
+            "text": "Manage Views: View -> Manager"
+        },
+        {
+            "type": "text",
+            "text": "New Layout: Layout -> New"
+        },
+        {
+            "type": "text",
+            "text": "Save Layout: Layout -> Save"
+        },
+        {
+            "type": "text",
+            "text": "Save Layout As: Layout -> Save As..."
+        }
+    ]
+}

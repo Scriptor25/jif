@@ -52,29 +52,38 @@ namespace jif
         std::map<std::string, JIFViewPtr> &Views() { return m_Views; }
 
         void SaveLayout();
+        void LoadLayout(const std::string &filename);
 
-        void OpenSaveWizard();
-        void OpenNewWizard();
+        void OpenSaveLayoutWizard();
+        void OpenNewLayoutWizard();
+        void OpenLoadLayoutWizard();
 
-        void OpenAddWizard();
+        void OpenAddViewWizard();
         void OpenViewManager();
 
-        void ShowSaveWizard();
-        void ShowNewWizard();
+        void ShowSaveLayoutWizard();
+        void ShowNewLayoutWizard();
+        void ShowLoadLayoutWizard();
 
-        void ShowAddWizard();
+        void ShowAddViewWizard();
         void ShowViewManager();
 
     private:
         void AddView(const std::string &id, const std::string &name, const std::string &type);
+        void Reset();
 
     private:
         std::string m_LayoutID;
         std::string m_LayoutName;
 
-        bool m_SaveWizardOpen = false;
-        bool m_NewWizardOpen = false;
-        bool m_AddWizardOpen = false;
+        std::string m_LayoutIDBkp;
+        std::string m_LayoutNameBkp;
+
+        bool m_SaveLayoutWizardOpen = false;
+        bool m_NewLayoutWizardOpen = false;
+        bool m_LoadLayoutWizardOpen = false;
+
+        bool m_AddViewWizardOpen = false;
         bool m_ViewManagerOpen = false;
 
         bool m_Saved = false;
