@@ -68,9 +68,6 @@ namespace jif
     private:
         void SetSize(int width, int height);
 
-        static int Error(const char *format, ...);
-        static int Warning(const char *format, ...);
-
         static void GLFWWindowSizeCallback(GLFWwindow *window, int width, int height);
         static void GLFWKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 

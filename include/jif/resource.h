@@ -10,15 +10,21 @@
 
 #pragma once
 
+#include "jifcore.h"
+
 #include <filesystem>
 #include <fstream>
+#include <imgui/imgui.h>
 #include <map>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <string>
 #include <vector>
 
 namespace jif
 {
+    class ResourceManager;
+
     struct Drawable
     {
         bool Load();
@@ -62,6 +68,7 @@ namespace jif
 
     ResourceType ToType(const std::string &type);
 
+    // Layout
     struct Layout
     {
         virtual ~Layout() {}
@@ -125,37 +132,86 @@ namespace jif
     };
     typedef std::shared_ptr<ViewLayout> ViewLayoutPtr;
 
+    // View Element Data
+    struct ViewElementData
+    {
+        virtual ~ViewElementData() {}
+    };
+    typedef std::shared_ptr<ViewElementData> ViewElementDataPtr;
+
+    struct TextData : ViewElementData
+    {
+        std::string Label;
+    };
+    typedef std::shared_ptr<TextData> TextDataPtr;
+
+    struct ButtonData : ViewElementData
+    {
+        std::string Label;
+    };
+    typedef std::shared_ptr<ButtonData> ButtonDataPtr;
+
+    struct ImageData : ViewElementData
+    {
+        ImTextureID TextureID;
+        ImVec2 Size;
+    };
+    typedef std::shared_ptr<ImageData> ImageDataPtr;
+
+    // View Type Element
     struct ViewTypeElement
     {
         virtual ~ViewTypeElement() {}
-        virtual void Show() const = 0;
+        virtual void Show(ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const = 0;
     };
     typedef std::shared_ptr<ViewTypeElement> ViewTypeElementPtr;
 
     struct ElementText : ViewTypeElement
     {
-        void Show() const override;
+        void Show(ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const override;
 
-        std::string Text;
+        std::string Source;
+        std::string Value;
     };
     typedef std::shared_ptr<ElementText> ElementTextPtr;
 
     struct ElementButton : ViewTypeElement
     {
-        void Show() const override;
+        void Show(ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const override;
 
-        std::string Text;
+        std::string TextSource;
+        std::string TextValue;
         std::string Action;
     };
     typedef std::shared_ptr<ElementButton> ElementButtonPtr;
+
+    struct ElementImage : ViewTypeElement
+    {
+        void Show(ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const override;
+
+        std::string Source;
+        std::string Value;
+    };
+    typedef std::shared_ptr<ElementImage> ElementImagePtr;
+
+    // View Type
+    struct ViewTypeField
+    {
+        std::string Id;
+        std::string Label;
+        std::string Default;
+    };
+    typedef std::shared_ptr<ViewTypeField> ViewTypeFieldPtr;
 
     struct ViewType
     {
         std::string Id;
         std::vector<ViewTypeElementPtr> Elements;
+        std::vector<ViewTypeFieldPtr> Fields;
     };
     typedef std::shared_ptr<ViewType> ViewTypePtr;
 
+    // Resource Manager
     typedef std::shared_ptr<std::ifstream> IFStreamPtr;
     class ResourceManager
     {
@@ -177,6 +233,8 @@ namespace jif
         const MenuBarPtr GetMenuBar(const std::string &id) { return std::dynamic_pointer_cast<MenuBar>(m_Layouts[ResourceType_Layout_MenuBar][id]); }
         const ViewPtr GetView(const std::string &id) { return std::dynamic_pointer_cast<View>(m_Layouts[ResourceType_Layout_View][id]); }
         const ViewLayoutPtr GetViewLayout(const std::string &id) { return std::dynamic_pointer_cast<ViewLayout>(m_Layouts[ResourceType_Layout_ViewLayout][id]); }
+
+        const std::vector<ViewTypePtr> GetViewTypes();
 
         static void Action(const std::string &id);
 
@@ -221,6 +279,8 @@ namespace jif
     void from_json(const nlohmann::json &json, ViewType &viewtype);
     void from_json(const nlohmann::json &json, ElementText &element);
     void from_json(const nlohmann::json &json, ElementButton &element);
+    void from_json(const nlohmann::json &json, ElementImage &element);
+    void from_json(const nlohmann::json &json, ViewTypeField &field);
 
     void from_json(const nlohmann::json &json, MenuItemPtr &menuitem);
     void from_json(const nlohmann::json &json, MenuPtr &menu);
@@ -229,4 +289,5 @@ namespace jif
     void from_json(const nlohmann::json &json, ViewLayoutPtr &layout);
     void from_json(const nlohmann::json &json, ViewTypePtr &viewtype);
     void from_json(const nlohmann::json &json, ViewTypeElementPtr &element);
+    void from_json(const nlohmann::json &json, ViewTypeFieldPtr &field);
 }

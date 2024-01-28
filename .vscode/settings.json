@@ -70,6 +70,10 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "valarray": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "csignal": "cpp",
+        "future": "cpp",
+        "shared_mutex": "cpp",
+        "variant": "cpp"
     }
 }

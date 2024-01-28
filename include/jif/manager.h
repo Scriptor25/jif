@@ -21,7 +21,12 @@ namespace jif
     {
     public:
         JIFView(std::string id, const std::string &label, const std::string &type)
-            : m_ID(id), m_Label(label), m_Type(type)
+            : JIFView(id, label, type, {})
+        {
+        }
+
+        JIFView(std::string id, const std::string &label, const std::string &type, const std::map<std::string, std::string> &fields)
+            : m_ID(id), m_Label(label), m_Type(type), m_Fields(fields)
         {
         }
 
@@ -31,6 +36,9 @@ namespace jif
         const std::string &Label() const { return m_Label; }
         const std::string &Type() const { return m_Type; }
 
+        ViewElementDataPtr &Data(size_t i) { return m_Data[i]; }
+        std::map<std::string, std::string> &Fields() { return m_Fields; }
+
         std::string ImGuiID() const { return m_Label + "##view@" + m_ID; }
 
     private:
@@ -38,21 +46,40 @@ namespace jif
         std::string m_ID;
         std::string m_Label;
         std::string m_Type;
+
+        std::map<size_t, ViewElementDataPtr> m_Data;
+        std::map<std::string, std::string> m_Fields;
     };
     typedef std::shared_ptr<JIFView> JIFViewPtr;
+
+    enum AddViewWizardState
+    {
+        AddViewWizardState_Name,
+        AddViewWizardState_Type,
+        AddViewWizardState_,
+    };
+
+    struct AddViewWizardData
+    {
+        std::string Label;
+        ViewTypePtr Type;
+        std::map<std::string, std::string> Fields;
+    };
 
     class JIFManager
     {
     public:
-        JIFManager() {}
+        JIFManager(ResourceManager &resources) : m_Resources(resources) {}
         JIFManager(ResourceManager &resources, const std::string &id);
 
         void CreateView(const std::string &label, const std::string &type);
+        void CreateView(const AddViewWizardData &data);
 
         std::map<std::string, JIFViewPtr> &Views() { return m_Views; }
 
         void SaveLayout();
         void LoadLayout(const std::string &filename);
+        void LoadLayoutResource(const std::string &id);
 
         void OpenSaveLayoutWizard();
         void OpenNewLayoutWizard();
@@ -65,14 +92,20 @@ namespace jif
         void ShowNewLayoutWizard();
         void ShowLoadLayoutWizard();
 
-        void ShowAddViewWizard();
         void ShowViewManager();
+        void ShowAddViewWizard();
+
+        void ShowAddViewWizardName();
+        void ShowAddViewWizardType();
 
     private:
         void AddView(const std::string &id, const std::string &name, const std::string &type);
         void Reset();
 
     private:
+        bool m_HasChanges = false;
+        ResourceManager &m_Resources;
+
         std::string m_LayoutID;
         std::string m_LayoutName;
 
@@ -86,7 +119,9 @@ namespace jif
         bool m_AddViewWizardOpen = false;
         bool m_ViewManagerOpen = false;
 
-        bool m_Saved = false;
+        AddViewWizardState m_AddViewWizardState;
+        AddViewWizardData m_AddViewWizardData;
+
         std::map<std::string, JIFViewPtr> m_Views;
     };
 }

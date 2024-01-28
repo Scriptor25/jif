@@ -15,13 +15,15 @@
 #include <imgui/imgui.h>
 #include <iostream>
 #include <jif/jif.h>
+#include <jif/jifcore.h>
 #include <jif/manager.h>
 #include <jif/resource.h>
 #include <jif/window.h>
+#include <rclcpp/rclcpp.hpp>
 
 void glfw_error_callback(int error_code, const char *description)
 {
-  printf("[Window 0x%08X] %s\r\n", error_code, description);
+  printf("[GLFW 0x%08X] %s\r\n", error_code, description);
 }
 
 int main(int argc, char **argv)
@@ -38,23 +40,6 @@ int main(int argc, char **argv)
 
   jif::Window window(800, 600, "JIF GUI", resources.GetResource("drawable/icon.png").c_str());
   window.MakeCurrent();
-
-  window.Register(
-      [&resources, &manager, &menubar](int key, int scancode, int action, int mods)
-      {
-        (void)scancode;
-        (void)mods;
-
-        if (key == GLFW_KEY_R && action == GLFW_RELEASE)
-        {
-          resources.ScanResources();
-          manager = jif::JIFManager(resources, "default");
-          menubar = resources.GetMenuBar("main");
-          return true;
-        }
-
-        return false;
-      });
 
   glewInit();
   glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
@@ -97,6 +82,11 @@ int main(int argc, char **argv)
                       { jif::ResourceManager::Action(action); });
   }
 
+  rclcpp::init(argc, argv);
+  auto core = std::make_shared<jif::JIFCore>();
+  std::thread rosthread([&core]()
+                        { rclcpp::spin(core); });
+
   while (window.Spin())
   {
     ImGui_ImplOpenGL3_NewFrame();
@@ -136,12 +126,15 @@ int main(int argc, char **argv)
       auto &view = entry.second;
       if (!view->IsOpen())
         continue;
-      if (ImGui::Begin(view->ImGuiID().c_str(), &view->IsOpen()))
+      if (ImGui::Begin(view->ImGuiID().c_str(), &view->IsOpen(), ImGuiWindowFlags_AlwaysAutoResize))
       {
         auto type = resources.GetViewType(view->Type());
         if (type)
+        {
+          size_t i = 0;
           for (auto &element : type->Elements)
-            element->Show();
+            element->Show(resources, core, view->Fields(), view->Data(i++));
+        }
       }
       ImGui::End();
     }
@@ -159,6 +152,8 @@ int main(int argc, char **argv)
       window.MakeCurrent();
     }
   }
+
+  rclcpp::shutdown();
 
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();

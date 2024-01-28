@@ -18,8 +18,8 @@
 
 namespace jif
 {
-    void UnpackJIF(const std::filesystem::path &srcjif, const std::filesystem::path &dstdir);
-    void PackJIF(const std::filesystem::path &srcdir, const std::filesystem::path &dstjif);
+    bool UnpackJIF(const std::filesystem::path &srcjif, const std::filesystem::path &dstdir);
+    bool PackJIF(const std::filesystem::path &srcdir, const std::filesystem::path &dstjif);
 
     template <typename T>
     std::ostream &operator<<(std::ostream &out, const std::vector<T> &vec);

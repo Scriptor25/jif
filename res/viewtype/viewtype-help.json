@@ -4,27 +4,46 @@
     "elements": [
         {
             "type": "text",
-            "text": "Exit: File -> Exit"
+            "text": {
+                "src": "value",
+                "value": "Exit: File -> Exit"
+            }
         },
         {
             "type": "text",
-            "text": "Add View: View -> Add"
+            "text": {
+                "src": "value",
+                "value": "Add View: View -> Add"
+            }
         },
         {
             "type": "text",
-            "text": "Manage Views: View -> Manager"
+            "text": {
+                "src": "value",
+                "value": "Manage Views: View -> Manager"
+            }
         },
         {
             "type": "text",
-            "text": "New Layout: Layout -> New"
+            "text": {
+                "src": "value",
+                "value": "New Layout: Layout -> New"
+            }
         },
         {
             "type": "text",
-            "text": "Save Layout: Layout -> Save"
+            "text": {
+                "src": "value",
+                "value": "Save Layout: Layout -> Save"
+            }
         },
         {
             "type": "text",
-            "text": "Save Layout As: Layout -> Save As..."
+            "text": {
+                "src": "value",
+                "value": "Save Layout As: Layout -> Save As..."
+            }
         }
-    ]
+    ],
+    "fields": []
 }

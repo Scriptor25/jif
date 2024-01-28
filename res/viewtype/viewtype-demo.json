@@ -4,12 +4,19 @@
     "elements": [
         {
             "type": "text",
-            "text": "Hello World!"
+            "text": {
+                "src": "value",
+                "value": "Hello World!"
+            }
         },
         {
             "type": "button",
-            "text": "Click me",
+            "text": {
+                "src": "value",
+                "value": "Click me"
+            },
             "action": "demo.click"
         }
-    ]
+    ],
+    "fields": []
 }

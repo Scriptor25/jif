@@ -1,0 +1,20 @@
+{
+    "type": "viewtype",
+    "id": "image",
+    "elements": [
+        {
+            "type": "image",
+            "img": {
+                "src": "rostopic",
+                "value": "$imgsrc"
+            }
+        }
+    ],
+    "fields": [
+        {
+            "id": "imgsrc",
+            "label": "Image Topic",
+            "default": ""
+        }
+    ]
+}

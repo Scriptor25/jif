@@ -8,7 +8,6 @@
  * ------------------------------------------------------------
  */
 
-#include <imgui/imgui.h>
 #include <iostream>
 #include <jif/resource.h>
 
@@ -36,17 +35,6 @@ jif::ResourceType jif::ToType(const std::string &type)
         return ResourceType_ViewType;
 
     return ResourceType_Error;
-}
-
-void jif::ElementText::Show() const
-{
-    ImGui::TextUnformatted(Text.c_str());
-}
-
-void jif::ElementButton::Show() const
-{
-    if (ImGui::Button(Text.c_str()))
-        ResourceManager::Action(Action);
 }
 
 jif::ResourceManager::ResourceManager(const std::filesystem::path &executable)
@@ -78,12 +66,20 @@ void jif::ResourceManager::ScanResources()
     ScanDir(GetResource("viewtype"));
 }
 
+const std::vector<jif::ViewTypePtr> jif::ResourceManager::GetViewTypes()
+{
+    std::vector<ViewTypePtr> viewtypes;
+    for (auto &entry : m_ViewTypes)
+        viewtypes.push_back(entry.second);
+    return viewtypes;
+}
+
 void jif::ResourceManager::Action(const std::string &id)
 {
     if (auto action = ACTIONS[id])
         action();
     else
-        std::cerr << "Undefined action '" << id << "'" << std::endl;
+        std::cerr << "[ResourceManager] Undefined action '" << id << "'" << std::endl;
 }
 
 void jif::ResourceManager::ScanDir(const std::filesystem::path &dir)
@@ -98,19 +94,20 @@ void jif::ResourceManager::ScanDir(const std::filesystem::path &dir)
 
         if (file.path().extension() != ".json")
         {
-            std::cerr << "Skipping non-json file " << file << " (" << file.path().extension() << ")" << std::endl;
+            std::cerr << "[ResourceManager] Skipping non-json file " << file << " (" << file.path().extension() << ")" << std::endl;
             continue;
         }
 
         std::ifstream stream(file.path());
         if (!stream)
         {
-            std::cerr << "Failed to open file " << file << std::endl;
+            std::cerr << "[ResourceManager] Failed to open file " << file << std::endl;
             continue;
         }
 
         nlohmann::json json;
         stream >> json;
+        stream.close();
 
         std::string type = json["type"];
         std::string id = json["id"];
@@ -152,7 +149,5 @@ void jif::ResourceManager::ScanDir(const std::filesystem::path &dir)
         default:
             break;
         }
-
-        stream.close();
     }
 }

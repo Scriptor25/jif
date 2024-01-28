@@ -76,7 +76,7 @@ jif::Window::Window(int width, int height, const char *title, const char *iconna
     m_GLFW = glfwCreateWindow(width, height, title, NULL, NULL);
     if (!m_GLFW)
     {
-        Error("Failed to create window");
+        std::cerr << "[Window] Failed to create window for width " << width << " height " << height << " title '" << title << "'" << std::endl;
         return;
     }
 
@@ -85,7 +85,7 @@ jif::Window::Window(int width, int height, const char *title, const char *iconna
     GLFWimage icon;
     icon.pixels = stbi_load(iconname, &icon.width, &icon.height, NULL, 4);
     if (!icon.pixels)
-        Warning("Failed to load icon");
+        std::cerr << "Failed to load icon '" << iconname << "'" << std::endl;
     glfwSetWindowIcon(m_GLFW, 1, &icon);
     stbi_image_free(icon.pixels);
 
@@ -157,34 +157,6 @@ void jif::Window::SetSize(int width, int height)
 {
     m_Width = width;
     m_Height = height;
-}
-
-int jif::Window::Error(const char *format, ...)
-{
-    printf("[Window Error] ");
-
-    va_list ap;
-    va_start(ap, format);
-    vprintf(format, ap);
-    va_end(ap);
-
-    printf("\r\n");
-
-    return 1;
-}
-
-int jif::Window::Warning(const char *format, ...)
-{
-    printf("[Window Warning] ");
-
-    va_list ap;
-    va_start(ap, format);
-    vprintf(format, ap);
-    va_end(ap);
-
-    printf("\r\n");
-
-    return 2;
 }
 
 void jif::Window::GLFWWindowSizeCallback(GLFWwindow *window, int width, int height)

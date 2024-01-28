@@ -115,17 +115,33 @@ void jif::from_json(const nlohmann::json &json, ViewType &viewtype)
 {
     viewtype.Id = json["id"];
     viewtype.Elements = json["elements"];
+    viewtype.Fields = json["fields"];
 }
 
 void jif::from_json(const nlohmann::json &json, ElementText &element)
 {
-    element.Text = json["text"];
+    element.Source = json["text"]["src"];
+    element.Value = json["text"]["value"];
 }
 
 void jif::from_json(const nlohmann::json &json, ElementButton &element)
 {
-    element.Text = json["text"];
+    element.TextSource = json["text"]["src"];
+    element.TextValue = json["text"]["value"];
     element.Action = json["action"];
+}
+
+void jif::from_json(const nlohmann::json &json, ElementImage &element)
+{
+    element.Source = json["img"]["src"];
+    element.Value = json["img"]["value"];
+}
+
+void jif::from_json(const nlohmann::json &json, ViewTypeField &field)
+{
+    field.Id = json["id"];
+    field.Label = json["label"];
+    field.Default = json["default"];
 }
 
 void jif::from_json(const nlohmann::json &json, MenuItemPtr &menuitem)
@@ -181,6 +197,19 @@ void jif::from_json(const nlohmann::json &json, ViewTypeElementPtr &element)
         element = elem;
         return;
     }
+    if (type == "image")
+    {
+        auto elem = std::make_shared<ElementImage>();
+        from_json(json, *elem);
+        element = elem;
+        return;
+    }
+}
+
+void jif::from_json(const nlohmann::json &json, ViewTypeFieldPtr &field)
+{
+    field = std::make_shared<ViewTypeField>();
+    from_json(json, *field);
 }
 
 template <typename T>
