@@ -134,6 +134,7 @@ void jif::JIFManager::ShowViewManager()
             auto &view = m_Views[key];
             ImGui::ClearWindowSettings(view->ImGuiID().c_str());
             m_Views.erase(key);
+            m_HasChanges = true;
         }
     }
     ImGui::End();

@@ -45,7 +45,7 @@ void jif::to_json(nlohmann::json &json, const View &view)
 
 void jif::to_json(nlohmann::json &json, const ViewLayout &layout)
 {
-    json["type"] = "layout";
+    json["type"] = "viewlayout";
     json["id"] = layout.Id;
     json["name"] = layout.Name;
     json["views"] = layout.Views;

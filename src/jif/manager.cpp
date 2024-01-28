@@ -35,7 +35,7 @@ void jif::JIFManager::SaveLayout()
     for (auto &v : m_Views)
     {
         auto view = std::make_shared<View>();
-        view->Id = v.second->ImGuiID();
+        view->Id = v.second->ID();
         view->Name = v.second->Label();
         view->ViewType = v.second->Type();
         layout->Views.push_back(view);
