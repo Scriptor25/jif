@@ -25,31 +25,6 @@ namespace jif
 {
     class ResourceManager;
 
-    struct Drawable
-    {
-        bool Load();
-        void Free();
-
-        std::filesystem::path FilePath;
-
-        char *Pixels = 0;
-        int Width = 0;
-        int Height = 0;
-        int Channels = 0;
-    };
-    typedef std::shared_ptr<Drawable> DrawablePtr;
-
-    struct Font
-    {
-        bool Load();
-        void Free();
-
-        std::filesystem::path FilePath;
-
-        void *Data = 0;
-    };
-    typedef std::shared_ptr<Font> FontPtr;
-
     enum ResourceType
     {
         ResourceType_Error,
@@ -65,15 +40,54 @@ namespace jif
 
         ResourceType_ViewType,
     };
-
     ResourceType ToType(const std::string &type);
 
-    // Layout
-    struct Layout
+    struct Resource
     {
-        virtual ~Layout() {}
+        virtual ~Resource() {}
         virtual std::string GetID() const = 0;
         virtual ResourceType GetType() const = 0;
+    };
+    typedef std::shared_ptr<Resource> ResourcePtr;
+
+    struct Drawable : Resource
+    {
+        std::string GetID() const override { return Id; }
+        ResourceType GetType() const override { return ResourceType_Drawable; }
+
+        bool Load();
+        void Free();
+
+        std::string Id;
+        std::string Filename;
+
+        unsigned char *Pixels = 0;
+        int Width = 0;
+        int Height = 0;
+        int Channels = 0;
+    };
+    typedef std::shared_ptr<Drawable> DrawablePtr;
+
+    struct Font : Resource
+    {
+        std::string GetID() const override { return Id; }
+        ResourceType GetType() const override { return ResourceType_Font; }
+
+        bool Load();
+        void Free();
+
+        std::string Id;
+        std::string Filename;
+
+        void *Data = 0;
+        size_t Size = 0;
+    };
+    typedef std::shared_ptr<Font> FontPtr;
+
+    // Layout
+    struct Layout : Resource
+    {
+        virtual ~Layout() {}
     };
     typedef std::shared_ptr<Layout> LayoutPtr;
 
@@ -118,6 +132,7 @@ namespace jif
         std::string Id;
         std::string Name;
         std::string ViewType;
+        std::map<std::string, std::string> Fields;
     };
     typedef std::shared_ptr<View> ViewPtr;
 
@@ -220,6 +235,7 @@ namespace jif
 
         std::filesystem::path GetResource(const char *name) const;
         IFStreamPtr GetResourceStream(const char *name) const;
+        std::filesystem::path GetRoot() const;
 
         void ScanResources();
 
@@ -271,6 +287,8 @@ namespace jif
     void to_json(nlohmann::json &json, const ViewPtr &view);
     void to_json(nlohmann::json &json, const ViewLayoutPtr &layout);
 
+    void from_json(const nlohmann::json &json, Drawable &drawable);
+    void from_json(const nlohmann::json &json, Font &font);
     void from_json(const nlohmann::json &json, MenuItem &menuitem);
     void from_json(const nlohmann::json &json, Menu &menu);
     void from_json(const nlohmann::json &json, MenuBar &menubar);
@@ -282,6 +300,8 @@ namespace jif
     void from_json(const nlohmann::json &json, ElementImage &element);
     void from_json(const nlohmann::json &json, ViewTypeField &field);
 
+    void from_json(const nlohmann::json &json, DrawablePtr &drawable);
+    void from_json(const nlohmann::json &json, FontPtr &font);
     void from_json(const nlohmann::json &json, MenuItemPtr &menuitem);
     void from_json(const nlohmann::json &json, MenuPtr &menu);
     void from_json(const nlohmann::json &json, MenuBarPtr &menubar);

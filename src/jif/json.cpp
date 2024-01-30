@@ -41,6 +41,7 @@ void jif::to_json(nlohmann::json &json, const View &view)
     json["id"] = view.Id;
     json["name"] = view.Name;
     json["viewtype"] = view.ViewType;
+    json["fields"] = view.Fields;
 }
 
 void jif::to_json(nlohmann::json &json, const ViewLayout &layout)
@@ -76,6 +77,18 @@ void jif::to_json(nlohmann::json &json, const ViewLayoutPtr &layout)
     to_json(json, *layout);
 }
 
+void jif::from_json(const nlohmann::json &json, Drawable &drawable)
+{
+    drawable.Id = json["id"];
+    drawable.Filename = json["filename"];
+}
+
+void jif::from_json(const nlohmann::json &json, Font &font)
+{
+    font.Id = json["id"];
+    font.Filename = json["filename"];
+}
+
 void jif::from_json(const nlohmann::json &json, MenuItem &menuitem)
 {
     menuitem.Id = json["id"];
@@ -102,6 +115,7 @@ void jif::from_json(const nlohmann::json &json, View &view)
     view.Id = json["id"];
     view.Name = json["name"];
     view.ViewType = json["viewtype"];
+    view.Fields = json["fields"];
 }
 
 void jif::from_json(const nlohmann::json &json, ViewLayout &layout)
@@ -142,6 +156,18 @@ void jif::from_json(const nlohmann::json &json, ViewTypeField &field)
     field.Id = json["id"];
     field.Label = json["label"];
     field.Default = json["default"];
+}
+
+void jif::from_json(const nlohmann::json &json, DrawablePtr &drawable)
+{
+    drawable = std::make_shared<Drawable>();
+    from_json(json, *drawable);
+}
+
+void jif::from_json(const nlohmann::json &json, FontPtr &font)
+{
+    font = std::make_shared<Font>();
+    from_json(json, *font);
 }
 
 void jif::from_json(const nlohmann::json &json, MenuItemPtr &menuitem)

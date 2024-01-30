@@ -13,6 +13,15 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <jif/manager.h>
 
+void jif::JIFManager::NotifyBeforeNewFrame()
+{
+    if (!m_LoadLayoutName.empty())
+    {
+        LoadLayout(m_LoadLayoutName);
+        m_LoadLayoutName.clear();
+    }
+}
+
 void jif::JIFManager::ShowSaveLayoutWizard()
 {
     if (!m_SaveLayoutWizardOpen)
@@ -98,7 +107,7 @@ void jif::JIFManager::ShowLoadLayoutWizard()
             if (!filepath.has_extension())
                 LoadLayoutResource(filename);
             else
-                LoadLayout(filename);
+                m_LoadLayoutName = filename;
             filename.clear();
         }
         ImGui::SameLine();

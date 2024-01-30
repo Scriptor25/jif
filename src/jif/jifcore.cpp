@@ -32,7 +32,6 @@ int main(int argc, char **argv)
   (void)argv;
 
   jif::ResourceManager resources(argv[0]);
-  jif::JIFManager manager(resources, "default");
   auto menubar = resources.GetMenuBar("main");
 
   glfwSetErrorCallback(glfw_error_callback);
@@ -47,6 +46,7 @@ int main(int argc, char **argv)
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
+  io.IniFilename = nullptr; // Manually Read/Write ini
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -56,6 +56,7 @@ int main(int argc, char **argv)
   ImGui_ImplOpenGL3_Init();
 
   auto &actions = jif::ResourceManager::ACTIONS;
+  jif::JIFManager manager(resources, "default");
 
   actions["file.exit"] = [&window]()
   { window.Close(); };
@@ -89,6 +90,8 @@ int main(int argc, char **argv)
 
   while (window.Spin())
   {
+    manager.NotifyBeforeNewFrame();
+
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();

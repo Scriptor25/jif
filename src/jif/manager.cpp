@@ -21,6 +21,11 @@ jif::JIFManager::JIFManager(ResourceManager &resources, const std::string &id)
     LoadLayoutResource(id);
 }
 
+bool jif::JIFManager::HasChanges() const
+{
+    return m_HasChanges || ImGui::GetIO().WantSaveIniSettings;
+}
+
 void jif::JIFManager::SaveLayout()
 {
     if (m_LayoutName.empty() || m_LayoutID.empty())
@@ -38,6 +43,7 @@ void jif::JIFManager::SaveLayout()
         view->Id = v.second->ID();
         view->Name = v.second->Label();
         view->ViewType = v.second->Type();
+        view->Fields = v.second->Fields();
         layout->Views.push_back(view);
     }
 
@@ -51,6 +57,7 @@ void jif::JIFManager::SaveLayout()
         std::ofstream stream(layoutjson);
         stream << json;
     }
+
     ImGui::SaveIniSettingsToDisk(imguiini.c_str());
 
     if (!PackJIF("tmp", m_LayoutName + ".jif"))
@@ -95,7 +102,8 @@ void jif::JIFManager::LoadLayout(const std::string &filename)
         auto id = view->Id;
         auto name = view->Name;
         auto type = view->ViewType;
-        AddView(id, name, type);
+        auto fields = view->Fields;
+        AddView(id, name, type, fields);
     }
 
     ImGui::LoadIniSettingsFromDisk(imguiini.c_str());
@@ -123,7 +131,8 @@ void jif::JIFManager::LoadLayoutResource(const std::string &id)
         auto id = view->Id;
         auto name = view->Name;
         auto type = view->ViewType;
-        AddView(id, name, type);
+        auto fields = view->Fields;
+        AddView(id, name, type, fields);
     }
 
     m_HasChanges = false;
@@ -162,11 +171,7 @@ void jif::JIFManager::Reset()
 {
     m_LayoutID.clear();
     m_LayoutName.clear();
-    for (auto &entry : m_Views)
-    {
-        auto &view = entry.second;
-        ImGui::ClearWindowSettings(view->ImGuiID().c_str());
-    }
     m_Views.clear();
     m_HasChanges = false;
+    ImGui::ClearIniSettings();
 }

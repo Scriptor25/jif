@@ -37,6 +37,7 @@ namespace jif
         const std::string &Type() const { return m_Type; }
 
         ViewElementDataPtr &Data(size_t i) { return m_Data[i]; }
+        std::map<size_t, ViewElementDataPtr> &Data() { return m_Data; }
         std::map<std::string, std::string> &Fields() { return m_Fields; }
 
         std::string ImGuiID() const { return m_Label + "##view@" + m_ID; }
@@ -75,6 +76,9 @@ namespace jif
         void CreateView(const std::string &label, const std::string &type);
         void CreateView(const AddViewWizardData &data);
 
+        bool HasChanges() const;
+        void NoChanges();
+
         std::map<std::string, JIFViewPtr> &Views() { return m_Views; }
 
         void SaveLayout();
@@ -88,6 +92,8 @@ namespace jif
         void OpenAddViewWizard();
         void OpenViewManager();
 
+        void NotifyBeforeNewFrame();
+
         void ShowSaveLayoutWizard();
         void ShowNewLayoutWizard();
         void ShowLoadLayoutWizard();
@@ -99,7 +105,7 @@ namespace jif
         void ShowAddViewWizardType();
 
     private:
-        void AddView(const std::string &id, const std::string &name, const std::string &type);
+        void AddView(const std::string &id, const std::string &name, const std::string &type, const std::map<std::string, std::string> &fields);
         void Reset();
 
     private:
@@ -111,6 +117,8 @@ namespace jif
 
         std::string m_LayoutIDBkp;
         std::string m_LayoutNameBkp;
+
+        std::string m_LoadLayoutName;
 
         bool m_SaveLayoutWizardOpen = false;
         bool m_NewLayoutWizardOpen = false;

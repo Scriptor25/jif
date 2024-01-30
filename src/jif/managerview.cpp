@@ -36,8 +36,8 @@ void jif::JIFManager::CreateView(const AddViewWizardData &data)
     m_HasChanges = true;
 }
 
-void jif::JIFManager::AddView(const std::string &id, const std::string &name, const std::string &type)
+void jif::JIFManager::AddView(const std::string &id, const std::string &name, const std::string &type, const std::map<std::string, std::string> &fields)
 {
-    m_Views[id] = std::make_shared<JIFView>(id, name, type);
+    m_Views[id] = std::make_shared<JIFView>(id, name, type, fields);
     std::cout << "[JIFManager] Added view '" << name << "' (" << id << ") type '" << type << "'" << std::endl;
 }
