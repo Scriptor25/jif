@@ -11,6 +11,7 @@
 #pragma once
 
 #include "jifcore.h"
+#include "manager.h"
 
 #include <filesystem>
 #include <fstream>
@@ -24,6 +25,7 @@
 namespace jif
 {
     class ResourceManager;
+    class JIFManager;
 
     enum ResourceType
     {
@@ -177,13 +179,13 @@ namespace jif
     struct ViewTypeElement
     {
         virtual ~ViewTypeElement() {}
-        virtual void Show(ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const = 0;
+        virtual void Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const = 0;
     };
     typedef std::shared_ptr<ViewTypeElement> ViewTypeElementPtr;
 
     struct ElementText : ViewTypeElement
     {
-        void Show(ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const override;
+        void Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const override;
 
         std::string Source;
         std::string Value;
@@ -192,7 +194,7 @@ namespace jif
 
     struct ElementButton : ViewTypeElement
     {
-        void Show(ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const override;
+        void Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const override;
 
         std::string TextSource;
         std::string TextValue;
@@ -202,7 +204,7 @@ namespace jif
 
     struct ElementImage : ViewTypeElement
     {
-        void Show(ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const override;
+        void Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const override;
 
         std::string Source;
         std::string Value;

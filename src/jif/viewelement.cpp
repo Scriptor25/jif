@@ -16,7 +16,7 @@
 #include <stb/stb_image.h>
 #include <std_msgs/msg/string.hpp>
 
-void jif::ElementText::Show(ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
+void jif::ElementText::Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
 {
     (void)resources;
     (void)core;
@@ -58,7 +58,7 @@ void jif::ElementText::Show(ResourceManager &resources, JIFCorePtr core, std::ma
     ImGui::TextUnformatted(textdata->Label.c_str());
 }
 
-void jif::ElementButton::Show(ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
+void jif::ElementButton::Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
 {
     (void)resources;
     (void)core;
@@ -101,7 +101,7 @@ void jif::ElementButton::Show(ResourceManager &resources, JIFCorePtr core, std::
         ResourceManager::Action(Action);
 }
 
-void jif::ElementImage::Show(ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
+void jif::ElementImage::Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
 {
     (void)resources;
     (void)core;
@@ -120,27 +120,38 @@ void jif::ElementImage::Show(ResourceManager &resources, JIFCorePtr core, std::m
         {
             core->RegisterSubscription<sensor_msgs::msg::CompressedImage>(
                 value,
-                [imagedata](const sensor_msgs::msg::CompressedImage &msg)
+                [&manager, imagedata](const sensor_msgs::msg::CompressedImage &msg)
                 {
-                    int width, height, channels;
-                    auto data = stbi_load_from_memory(msg.data.data(), msg.data.size(), &width, &height, &channels, 4);
-                    if (!data)
-                    {
-                        std::cerr << "[ElementImage] Failed to load image from compressed image message data" << std::endl;
-                        return;
-                    }
+                    manager.Schedule(
+                        [&msg, imagedata]()
+                        {
+                            int width, height, channels;
+                            auto data = stbi_load_from_memory(msg.data.data(), msg.data.size(), &width, &height, &channels, 3);
+                            if (!data)
+                            {
+                                std::cerr << "[ElementImage] Failed to load image from compressed image message data" << std::endl;
+                                return;
+                            }
 
-                    imagedata->Size.x = width;
-                    imagedata->Size.y = height;
+                            imagedata->Size.x = width;
+                            imagedata->Size.y = height;
 
-                    auto &tex = imagedata->TextureID;
-                    if (!tex)
-                        glGenTextures(1, &tex);
-                    glBindTexture(GL_TEXTURE_2D, tex);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-                    glBindTexture(GL_TEXTURE_2D, 0);
+                            if (!imagedata->TextureID)
+                            {
+                                glGenTextures(1, &imagedata->TextureID);
+                                glBindTexture(GL_TEXTURE_2D, imagedata->TextureID);
+                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                            }
 
-                    stbi_image_free(data);
+                            glBindTexture(GL_TEXTURE_2D, imagedata->TextureID);
+                            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+                            glBindTexture(GL_TEXTURE_2D, 0);
+
+                            stbi_image_free(data);
+                        });
                 });
         }
 
@@ -148,5 +159,14 @@ void jif::ElementImage::Show(ResourceManager &resources, JIFCorePtr core, std::m
     }
 
     auto imagedata = std::dynamic_pointer_cast<ImageData>(data);
-    ImGui::Image((ImTextureID)(intptr_t)imagedata->TextureID, imagedata->Size);
+
+    auto iw = imagedata->Size.x;
+    auto ih = imagedata->Size.y;
+    auto region = ImGui::GetContentRegionAvail();
+    auto ww = region.x;
+    auto wh = region.y;
+
+    auto scale = std::min(ww / iw, wh / ih);
+    ImVec2 size(scale * iw, scale * ih);
+    ImGui::Image((ImTextureID)(intptr_t)imagedata->TextureID, size);
 }

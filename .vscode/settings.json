@@ -74,6 +74,9 @@
         "csignal": "cpp",
         "future": "cpp",
         "shared_mutex": "cpp",
-        "variant": "cpp"
-    }
+        "variant": "cpp",
+        "strstream": "cpp",
+        "cfenv": "cpp"
+    },
+    "cmake.configureOnOpen": false
 }

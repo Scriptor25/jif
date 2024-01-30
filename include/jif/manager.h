@@ -17,6 +17,12 @@
 
 namespace jif
 {
+    struct ViewElementData;
+    typedef std::shared_ptr<ViewElementData> ViewElementDataPtr;
+    struct ViewType;
+    typedef std::shared_ptr<ViewType> ViewTypePtr;
+    class ResourceManager;
+
     class JIFView
     {
     public:
@@ -82,6 +88,9 @@ namespace jif
 
         std::map<std::string, JIFViewPtr> &Views() { return m_Views; }
 
+        void Schedule(const std::function<void()> &func);
+        void NotifyBeforeNewFrame();
+
         void SaveLayout();
         void LoadLayout(const std::string &filename);
         void LoadLayoutResource(const std::string &id);
@@ -92,8 +101,6 @@ namespace jif
 
         void OpenAddViewWizard();
         void OpenViewManager();
-
-        void NotifyBeforeNewFrame();
 
         void ShowSaveLayoutWizard();
         void ShowNewLayoutWizard();
@@ -113,13 +120,13 @@ namespace jif
         bool m_HasChanges = false;
         ResourceManager &m_Resources;
 
+        std::vector<std::function<void()>> m_ScheduledTasks;
+
         std::string m_LayoutID;
         std::string m_LayoutName;
 
         std::string m_LayoutIDBkp;
         std::string m_LayoutNameBkp;
-
-        std::string m_LoadLayoutName;
 
         bool m_SaveLayoutWizardOpen = false;
         bool m_NewLayoutWizardOpen = false;
