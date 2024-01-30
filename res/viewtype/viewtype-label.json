@@ -1,0 +1,20 @@
+{
+    "type": "viewtype",
+    "id": "label",
+    "elements": [
+        {
+            "type": "text",
+            "text": {
+                "src": "ros",
+                "value": "$labelsrc"
+            }
+        }
+    ],
+    "fields": [
+        {
+            "id": "labelsrc",
+            "label": "Label Topic",
+            "default": ""
+        }
+    ]
+}

@@ -1,0 +1,22 @@
+{
+    "type": "viewtype",
+    "id": "demo",
+    "elements": [
+        {
+            "type": "text",
+            "text": {
+                "src": "value",
+                "value": "Hello World!"
+            }
+        },
+        {
+            "type": "button",
+            "text": {
+                "src": "value",
+                "value": "Click me"
+            },
+            "action": "demo.click"
+        }
+    ],
+    "fields": []
+}

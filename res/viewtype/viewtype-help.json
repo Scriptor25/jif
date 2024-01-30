@@ -1,0 +1,49 @@
+{
+    "type": "viewtype",
+    "id": "help",
+    "elements": [
+        {
+            "type": "text",
+            "text": {
+                "src": "value",
+                "value": "Exit: File -> Exit"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "src": "value",
+                "value": "Add View: View -> Add"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "src": "value",
+                "value": "Manage Views: View -> Manager"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "src": "value",
+                "value": "New Layout: Layout -> New"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "src": "value",
+                "value": "Save Layout: Layout -> Save"
+            }
+        },
+        {
+            "type": "text",
+            "text": {
+                "src": "value",
+                "value": "Save Layout As: Layout -> Save As..."
+            }
+        }
+    ],
+    "fields": []
+}

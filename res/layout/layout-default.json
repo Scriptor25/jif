@@ -1,0 +1,21 @@
+{
+    "type": "viewlayout",
+    "id": "default",
+    "name": "Default Layout",
+    "views": [
+        {
+            "type": "view",
+            "id": "0",
+            "name": "Demo",
+            "viewtype": "demo",
+            "fields": {}
+        },
+        {
+            "type": "view",
+            "id": "1",
+            "name": "Help",
+            "viewtype": "help",
+            "fields": {}
+        }
+    ]
+}

@@ -1,0 +1,35 @@
+{
+    "type": "menu",
+    "id": "layout",
+    "name": "Layout",
+    "items": [
+        {
+            "type": "menuitem",
+            "id": "layout.new",
+            "name": "New",
+            "alt": "ctrl+n",
+            "action": "layout.new"
+        },
+        {
+            "type": "menuitem",
+            "id": "layout.load",
+            "name": "Load",
+            "alt": "ctrl+l",
+            "action": "layout.load"
+        },
+        {
+            "type": "menuitem",
+            "id": "layout.save",
+            "name": "Save",
+            "alt": "ctrl+s",
+            "action": "layout.save"
+        },
+        {
+            "type": "menuitem",
+            "id": "layout.saveas",
+            "name": "Save As...",
+            "alt": "ctrl+shift+s",
+            "action": "layout.saveas"
+        }
+    ]
+}
