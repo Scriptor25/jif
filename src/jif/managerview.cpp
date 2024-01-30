@@ -20,7 +20,7 @@ void jif::JIFManager::CreateView(const std::string &label, const std::string &ty
     std::cout << "[JIFManager] Created view '" << label << "' (" << id << ") type '" << type << "'" << std::endl;
     id++;
 
-    m_HasChanges = true;
+    SetHasChanges();
 }
 
 void jif::JIFManager::CreateView(const AddViewWizardData &data)
@@ -33,7 +33,7 @@ void jif::JIFManager::CreateView(const AddViewWizardData &data)
     std::cout << "[JIFManager] Created view '" << data.Label << "' (" << id << ") type '" << data.Type->Id << std::endl;
     id++;
 
-    m_HasChanges = true;
+    SetHasChanges();
 }
 
 void jif::JIFManager::AddView(const std::string &id, const std::string &name, const std::string &type, const std::map<std::string, std::string> &fields)

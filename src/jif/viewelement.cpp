@@ -8,12 +8,13 @@
  * ------------------------------------------------------------
  */
 
+#include <GL/glew.h>
 #include <imgui/imgui.h>
 #include <jif/resource.h>
-#include <std_msgs/msg/string.hpp>
-#include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/image_encodings.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
 #include <stb/stb_image.h>
+#include <std_msgs/msg/string.hpp>
 
 void jif::ElementText::Show(ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
 {
@@ -117,11 +118,29 @@ void jif::ElementImage::Show(ResourceManager &resources, JIFCorePtr core, std::m
 
         if (Source == "ros")
         {
-            core->RegisterSubscription<sensor_msgs::msg::Image>(
+            core->RegisterSubscription<sensor_msgs::msg::CompressedImage>(
                 value,
-                [](const sensor_msgs::msg::Image &msg)
+                [imagedata](const sensor_msgs::msg::CompressedImage &msg)
                 {
-                    std::cout << "Got image encoding: " << msg.encoding << " width: " << msg.width << " height: " << msg.height << " step: " << msg.step << " is_bigendian: " << msg.is_bigendian << std::endl;
+                    int width, height, channels;
+                    auto data = stbi_load_from_memory(msg.data.data(), msg.data.size(), &width, &height, &channels, 4);
+                    if (!data)
+                    {
+                        std::cerr << "[ElementImage] Failed to load image from compressed image message data" << std::endl;
+                        return;
+                    }
+
+                    imagedata->Size.x = width;
+                    imagedata->Size.y = height;
+
+                    auto &tex = imagedata->TextureID;
+                    if (!tex)
+                        glGenTextures(1, &tex);
+                    glBindTexture(GL_TEXTURE_2D, tex);
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+                    glBindTexture(GL_TEXTURE_2D, 0);
+
+                    stbi_image_free(data);
                 });
         }
 
@@ -129,5 +148,5 @@ void jif::ElementImage::Show(ResourceManager &resources, JIFCorePtr core, std::m
     }
 
     auto imagedata = std::dynamic_pointer_cast<ImageData>(data);
-    ImGui::Image(imagedata->TextureID, imagedata->Size);
+    ImGui::Image((ImTextureID)(intptr_t)imagedata->TextureID, imagedata->Size);
 }

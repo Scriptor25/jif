@@ -26,6 +26,17 @@ bool jif::JIFManager::HasChanges() const
     return m_HasChanges || ImGui::GetIO().WantSaveIniSettings;
 }
 
+void jif::JIFManager::SetNoChanges()
+{
+    m_HasChanges = false;
+    ImGui::GetIO().WantSaveIniSettings = false;
+}
+
+void jif::JIFManager::SetHasChanges()
+{
+    m_HasChanges = true;
+}
+
 void jif::JIFManager::SaveLayout()
 {
     if (m_LayoutName.empty() || m_LayoutID.empty())
@@ -65,7 +76,7 @@ void jif::JIFManager::SaveLayout()
 
     std::filesystem::remove_all("tmp"); // delete tmp afterwards
 
-    m_HasChanges = false;
+    SetNoChanges();
 }
 
 void jif::JIFManager::LoadLayout(const std::string &filename)
@@ -108,8 +119,6 @@ void jif::JIFManager::LoadLayout(const std::string &filename)
 
     ImGui::LoadIniSettingsFromDisk(imguiini.c_str());
     std::filesystem::remove_all("tmp");
-
-    m_HasChanges = false;
 }
 
 void jif::JIFManager::LoadLayoutResource(const std::string &id)
@@ -134,8 +143,6 @@ void jif::JIFManager::LoadLayoutResource(const std::string &id)
         auto fields = view->Fields;
         AddView(id, name, type, fields);
     }
-
-    m_HasChanges = false;
 }
 
 void jif::JIFManager::OpenSaveLayoutWizard()
@@ -172,6 +179,6 @@ void jif::JIFManager::Reset()
     m_LayoutID.clear();
     m_LayoutName.clear();
     m_Views.clear();
-    m_HasChanges = false;
     ImGui::ClearIniSettings();
+    SetNoChanges();
 }

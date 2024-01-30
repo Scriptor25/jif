@@ -5,7 +5,7 @@
         {
             "type": "image",
             "img": {
-                "src": "rostopic",
+                "src": "ros",
                 "value": "$imgsrc"
             }
         }

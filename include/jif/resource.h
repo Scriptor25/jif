@@ -168,7 +168,7 @@ namespace jif
 
     struct ImageData : ViewElementData
     {
-        ImTextureID TextureID;
+        uint32_t TextureID;
         ImVec2 Size;
     };
     typedef std::shared_ptr<ImageData> ImageDataPtr;

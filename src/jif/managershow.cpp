@@ -53,7 +53,7 @@ void jif::JIFManager::ShowNewLayoutWizard()
     if (!m_NewLayoutWizardOpen)
         return;
 
-    if (!m_HasChanges)
+    if (!HasChanges())
     {
         m_NewLayoutWizardOpen = false;
         Reset();
@@ -90,7 +90,7 @@ void jif::JIFManager::ShowLoadLayoutWizard()
     if (!m_LoadLayoutWizardOpen)
         return;
 
-    if (m_HasChanges)
+    if (HasChanges())
     {
         OpenNewLayoutWizard();
         return;
@@ -143,7 +143,7 @@ void jif::JIFManager::ShowViewManager()
             auto &view = m_Views[key];
             ImGui::ClearWindowSettings(view->ImGuiID().c_str());
             m_Views.erase(key);
-            m_HasChanges = true;
+            SetHasChanges();
         }
     }
     ImGui::End();

@@ -77,7 +77,8 @@ namespace jif
         void CreateView(const AddViewWizardData &data);
 
         bool HasChanges() const;
-        void NoChanges();
+        void SetNoChanges();
+        void SetHasChanges();
 
         std::map<std::string, JIFViewPtr> &Views() { return m_Views; }
 
