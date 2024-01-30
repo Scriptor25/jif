@@ -37,6 +37,18 @@ void jif::JIFManager::SetHasChanges()
     m_HasChanges = true;
 }
 
+void jif::JIFManager::Schedule(const std::function<void()> &func)
+{
+    m_ScheduledTasks.push_back(func);
+}
+
+void jif::JIFManager::NotifyBeforeNewFrame()
+{
+    for (auto &task : m_ScheduledTasks)
+        task();
+    m_ScheduledTasks.clear();
+}
+
 void jif::JIFManager::SaveLayout()
 {
     if (m_LayoutName.empty() || m_LayoutID.empty())
