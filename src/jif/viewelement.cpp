@@ -16,15 +16,37 @@
 #include <stb/stb_image.h>
 #include <std_msgs/msg/string.hpp>
 
+jif::TextData::~TextData()
+{
+    if (!Topic.empty())
+        Manager.Schedule([core = Core, topic = Topic]()
+                         { core->UnregisterSubscription(topic); });
+}
+
+jif::ButtonData::~ButtonData()
+{
+    if (!Topic.empty())
+        Manager.Schedule([core = Core, topic = Topic]()
+                         { core->UnregisterSubscription(topic); });
+}
+
+jif::ImageData::~ImageData()
+{
+    if (!Topic.empty())
+        Manager.Schedule([core = Core, topic = Topic]()
+                         { core->UnregisterSubscription(topic); });
+    glDeleteTextures(1, &TextureID);
+    TextureID = 0;
+}
+
 void jif::ElementText::Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
 {
     (void)resources;
-    (void)core;
     (void)fields;
 
     if (!data)
     {
-        auto textdata = std::make_shared<TextData>();
+        auto textdata = std::make_shared<TextData>(manager, core);
 
         auto value =
             (Value[0] == '$')
@@ -43,6 +65,7 @@ void jif::ElementText::Show(JIFManager &manager, ResourceManager &resources, JIF
         }
         else if (Source == "ros")
         {
+            textdata->Topic = value;
             core->RegisterSubscription<std_msgs::msg::String>(
                 value,
                 [&label = textdata->Label](const std_msgs::msg::String &msg)
@@ -61,12 +84,11 @@ void jif::ElementText::Show(JIFManager &manager, ResourceManager &resources, JIF
 void jif::ElementButton::Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
 {
     (void)resources;
-    (void)core;
     (void)fields;
 
     if (!data)
     {
-        auto buttondata = std::make_shared<ButtonData>();
+        auto buttondata = std::make_shared<ButtonData>(manager, core);
 
         auto value =
             (TextValue[0] == '$')
@@ -85,6 +107,7 @@ void jif::ElementButton::Show(JIFManager &manager, ResourceManager &resources, J
         }
         else if (TextSource == "ros")
         {
+            buttondata->Topic = value;
             core->RegisterSubscription<std_msgs::msg::String>(
                 value,
                 [&label = buttondata->Label](const std_msgs::msg::String &msg)
@@ -104,12 +127,22 @@ void jif::ElementButton::Show(JIFManager &manager, ResourceManager &resources, J
 void jif::ElementImage::Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
 {
     (void)resources;
-    (void)core;
     (void)fields;
 
     if (!data)
     {
-        auto imagedata = std::make_shared<ImageData>();
+        auto imagedata = std::make_shared<ImageData>(manager, core);
+
+        manager.Schedule(
+            [imagedata]()
+            {
+                glGenTextures(1, &imagedata->TextureID);
+                glBindTexture(GL_TEXTURE_2D, imagedata->TextureID);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            });
 
         auto value =
             (Value[0] == '$')
@@ -118,12 +151,13 @@ void jif::ElementImage::Show(JIFManager &manager, ResourceManager &resources, JI
 
         if (Source == "ros")
         {
+            imagedata->Topic = value;
             core->RegisterSubscription<sensor_msgs::msg::CompressedImage>(
                 value,
                 [&manager, imagedata](const sensor_msgs::msg::CompressedImage &msg)
                 {
                     manager.Schedule(
-                        [&msg, imagedata]()
+                        [msg, imagedata]()
                         {
                             int width, height, channels;
                             auto data = stbi_load_from_memory(msg.data.data(), msg.data.size(), &width, &height, &channels, 3);
@@ -135,16 +169,6 @@ void jif::ElementImage::Show(JIFManager &manager, ResourceManager &resources, JI
 
                             imagedata->Size.x = width;
                             imagedata->Size.y = height;
-
-                            if (!imagedata->TextureID)
-                            {
-                                glGenTextures(1, &imagedata->TextureID);
-                                glBindTexture(GL_TEXTURE_2D, imagedata->TextureID);
-                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                            }
 
                             glBindTexture(GL_TEXTURE_2D, imagedata->TextureID);
                             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);

@@ -26,12 +26,12 @@ namespace jif
     class JIFView
     {
     public:
-        JIFView(std::string id, const std::string &label, const std::string &type)
+        JIFView(std::string id, const std::string &label, const ViewTypePtr &type)
             : JIFView(id, label, type, {})
         {
         }
 
-        JIFView(std::string id, const std::string &label, const std::string &type, const std::map<std::string, std::string> &fields)
+        JIFView(std::string id, const std::string &label, const ViewTypePtr &type, const std::map<std::string, std::string> &fields)
             : m_ID(id), m_Label(label), m_Type(type), m_Fields(fields)
         {
         }
@@ -40,7 +40,7 @@ namespace jif
         bool IsOpen() const { return m_IsOpen; }
         const std::string &ID() const { return m_ID; }
         const std::string &Label() const { return m_Label; }
-        const std::string &Type() const { return m_Type; }
+        ViewTypePtr Type() const { return m_Type; }
 
         ViewElementDataPtr &Data(size_t i) { return m_Data[i]; }
         std::map<size_t, ViewElementDataPtr> &Data() { return m_Data; }
@@ -52,7 +52,7 @@ namespace jif
         bool m_IsOpen = true;
         std::string m_ID;
         std::string m_Label;
-        std::string m_Type;
+        ViewTypePtr m_Type;
 
         std::map<size_t, ViewElementDataPtr> m_Data;
         std::map<std::string, std::string> m_Fields;
@@ -79,7 +79,7 @@ namespace jif
         JIFManager(ResourceManager &resources) : m_Resources(resources) {}
         JIFManager(ResourceManager &resources, const std::string &id);
 
-        void CreateView(const std::string &label, const std::string &type);
+        void CreateView(const std::string &label, const ViewTypePtr &type);
         void CreateView(const AddViewWizardData &data);
 
         bool HasChanges() const;
@@ -88,12 +88,13 @@ namespace jif
 
         std::map<std::string, JIFViewPtr> &Views() { return m_Views; }
 
-        void Schedule(const std::function<void()> &func);
+        void Schedule(const std::function<void()> &func, bool block = false);
         void NotifyBeforeNewFrame();
 
         void SaveLayout();
-        void LoadLayout(const std::string &filename);
-        void LoadLayoutResource(const std::string &id);
+        void LoadLayout(const std::string filename);
+        void LoadLayoutResource(const std::string layoutid);
+        void ReloadLayout();
 
         void OpenSaveLayoutWizard();
         void OpenNewLayoutWizard();
@@ -113,14 +114,17 @@ namespace jif
         void ShowAddViewWizardType();
 
     private:
-        void AddView(const std::string &id, const std::string &name, const std::string &type, const std::map<std::string, std::string> &fields);
+        void AddView(const std::string &id, const std::string &name, const ViewTypePtr &type, const std::map<std::string, std::string> &fields);
         void Reset();
 
     private:
         bool m_HasChanges = false;
         ResourceManager &m_Resources;
 
+        bool m_Blocked = false;
         std::vector<std::function<void()>> m_ScheduledTasks;
+
+        std::string m_LayoutFilename;
 
         std::string m_LayoutID;
         std::string m_LayoutName;

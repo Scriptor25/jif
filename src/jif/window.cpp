@@ -71,6 +71,8 @@ jif::Window::Window(int width, int height, const char *title, const char *iconna
 {
     m_Width = width;
     m_Height = height;
+    m_Title = title;
+    m_Saved = true;
 
     glfwDefaultWindowHints();
     m_GLFW = glfwCreateWindow(width, height, title, NULL, NULL);
@@ -151,6 +153,16 @@ void jif::Window::Register(const std::string &shortcut, const std::function<void
         auto sc = Shortcut::Parse(segment);
         m_Shortcuts[sc] = callback;
     }
+}
+
+void jif::Window::SetSaved(bool saved)
+{
+    if (m_Saved == saved)
+        return;
+    m_Saved = saved;
+
+    auto title = m_Saved ? m_Title : m_Title + "*";
+    glfwSetWindowTitle(m_GLFW, title.c_str());
 }
 
 void jif::Window::SetSize(int width, int height)

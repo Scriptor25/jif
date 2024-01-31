@@ -37,8 +37,11 @@ void jif::JIFManager::SetHasChanges()
     m_HasChanges = true;
 }
 
-void jif::JIFManager::Schedule(const std::function<void()> &func)
+void jif::JIFManager::Schedule(const std::function<void()> &func, bool block)
 {
+    if (m_Blocked)
+        return;
+    m_Blocked = block;
     m_ScheduledTasks.push_back(func);
 }
 
@@ -46,6 +49,7 @@ void jif::JIFManager::NotifyBeforeNewFrame()
 {
     for (auto &task : m_ScheduledTasks)
         task();
+    m_Blocked = false;
     m_ScheduledTasks.clear();
 }
 
@@ -65,7 +69,7 @@ void jif::JIFManager::SaveLayout()
         auto view = std::make_shared<View>();
         view->Id = v.second->ID();
         view->Name = v.second->Label();
-        view->ViewType = v.second->Type();
+        view->ViewType = v.second->Type()->Id;
         view->Fields = v.second->Fields();
         layout->Views.push_back(view);
     }
@@ -91,9 +95,11 @@ void jif::JIFManager::SaveLayout()
     SetNoChanges();
 }
 
-void jif::JIFManager::LoadLayout(const std::string &filename)
+void jif::JIFManager::LoadLayout(const std::string filename)
 {
     Reset();
+
+    m_LayoutFilename = filename;
 
     std::filesystem::remove_all("tmp");
     std::filesystem::create_directory("tmp");
@@ -124,7 +130,7 @@ void jif::JIFManager::LoadLayout(const std::string &filename)
     {
         auto id = view->Id;
         auto name = view->Name;
-        auto type = view->ViewType;
+        auto type = m_Resources.GetViewType(view->ViewType);
         auto fields = view->Fields;
         AddView(id, name, type, fields);
     }
@@ -133,14 +139,16 @@ void jif::JIFManager::LoadLayout(const std::string &filename)
     std::filesystem::remove_all("tmp");
 }
 
-void jif::JIFManager::LoadLayoutResource(const std::string &id)
+void jif::JIFManager::LoadLayoutResource(const std::string layoutid)
 {
     Reset();
 
-    auto layout = m_Resources.GetViewLayout(id);
+    m_LayoutFilename = layoutid;
+
+    auto layout = m_Resources.GetViewLayout(layoutid);
     if (!layout)
     {
-        std::cerr << "[JIFManager] Failed to get view layout for id '" << id << "'" << std::endl;
+        std::cerr << "[JIFManager] Failed to get view layout for id '" << layoutid << "'" << std::endl;
         return;
     }
 
@@ -151,10 +159,24 @@ void jif::JIFManager::LoadLayoutResource(const std::string &id)
     {
         auto id = view->Id;
         auto name = view->Name;
-        auto type = view->ViewType;
+        auto type = m_Resources.GetViewType(view->ViewType);
         auto fields = view->Fields;
         AddView(id, name, type, fields);
     }
+}
+
+void jif::JIFManager::ReloadLayout()
+{
+    if (m_LayoutFilename.empty())
+        return;
+
+    std::filesystem::path filepath(m_LayoutFilename);
+    if (!filepath.has_extension())
+        LoadLayoutResource(m_LayoutFilename);
+    else
+        Schedule([this]()
+                 { LoadLayout(m_LayoutFilename); },
+                 true);
 }
 
 void jif::JIFManager::OpenSaveLayoutWizard()
@@ -191,6 +213,8 @@ void jif::JIFManager::Reset()
     m_LayoutID.clear();
     m_LayoutName.clear();
     m_Views.clear();
+    m_ScheduledTasks.clear();
+    m_LayoutFilename.clear();
     ImGui::ClearIniSettings();
     SetNoChanges();
 }
