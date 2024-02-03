@@ -148,7 +148,7 @@ int main(int argc, char **argv)
       auto &view = entry.second;
       if (!view->IsOpen())
         continue;
-      if (ImGui::Begin(view->ImGuiID().c_str(), &view->IsOpen(), ImGuiWindowFlags_AlwaysAutoResize))
+      if (ImGui::Begin(view->ImGuiID().c_str(), &view->IsOpen() /*, ImGuiWindowFlags_AlwaysAutoResize*/))
       {
         auto type = view->Type();
         if (type)
