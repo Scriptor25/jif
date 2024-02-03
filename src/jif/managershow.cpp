@@ -107,7 +107,8 @@ void jif::JIFManager::ShowLoadLayoutWizard()
                     {
                         LoadLayout(filename);
                         filename.clear();
-                    });
+                    },
+                    true);
             }
         }
         ImGui::SameLine();

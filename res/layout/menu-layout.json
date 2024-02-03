@@ -19,6 +19,13 @@
         },
         {
             "type": "menuitem",
+            "id": "layout.reload",
+            "name": "Reload",
+            "alt": "ctrl+shift+l",
+            "action": "layout.reload"
+        },
+        {
+            "type": "menuitem",
             "id": "layout.save",
             "name": "Save",
             "alt": "ctrl+s",

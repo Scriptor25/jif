@@ -11,14 +11,13 @@
 #include <iostream>
 #include <jif/manager.h>
 
-void jif::JIFManager::CreateView(const std::string &label, const std::string &type)
+void jif::JIFManager::CreateView(const std::string &label, const ViewTypePtr &type)
 {
     static size_t id = 0;
-    while (m_Views.count(std::to_string(id++)))
-        ;
+    while (m_Views.count(std::to_string(id)))
+        ++id;
     m_Views[std::to_string(id)] = std::make_shared<JIFView>(std::to_string(id), label, type);
-    std::cout << "[JIFManager] Created view '" << label << "' (" << id << ") type '" << type << "'" << std::endl;
-    id++;
+    std::cout << "[JIFManager] Created view '" << label << "' (" << id << ") type '" << type->Id << "'" << std::endl;
 
     SetHasChanges();
 }
@@ -26,18 +25,16 @@ void jif::JIFManager::CreateView(const std::string &label, const std::string &ty
 void jif::JIFManager::CreateView(const AddViewWizardData &data)
 {
     static size_t id = 0;
-    while (m_Views.count(std::to_string(id++)))
-        ;
-    auto view = std::make_shared<JIFView>(std::to_string(id), data.Label, data.Type->Id, data.Fields);
-    m_Views[std::to_string(id)] = view;
+    while (m_Views.count(std::to_string(id)))
+        ++id;
+    m_Views[std::to_string(id)] = std::make_shared<JIFView>(std::to_string(id), data.Label, data.Type, data.Fields);
     std::cout << "[JIFManager] Created view '" << data.Label << "' (" << id << ") type '" << data.Type->Id << std::endl;
-    id++;
 
     SetHasChanges();
 }
 
-void jif::JIFManager::AddView(const std::string &id, const std::string &name, const std::string &type, const std::map<std::string, std::string> &fields)
+void jif::JIFManager::AddView(const std::string &id, const std::string &name, const ViewTypePtr &type, const std::map<std::string, std::string> &fields)
 {
     m_Views[id] = std::make_shared<JIFView>(id, name, type, fields);
-    std::cout << "[JIFManager] Added view '" << name << "' (" << id << ") type '" << type << "'" << std::endl;
+    std::cout << "[JIFManager] Added view '" << name << "' (" << id << ") type '" << type->Id << "'" << std::endl;
 }

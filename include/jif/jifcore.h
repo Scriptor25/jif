@@ -27,16 +27,12 @@ namespace jif
         template <typename T>
         void RegisterPublisher(const std::string &topic)
         {
-            if (m_Publishers[topic])
-                m_Publishers[topic].reset();
             m_Publishers[topic] = create_publisher<T>(topic, 10);
         }
 
         template <typename T>
         void RegisterSubscription(const std::string &topic, const std::function<void(const T &msg)> &callback)
         {
-            if (m_Subsciptions[topic])
-                m_Subsciptions[topic].reset();
             m_Subsciptions[topic] = create_subscription<T>(topic, 10, callback);
         }
 
@@ -46,6 +42,9 @@ namespace jif
             auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<T>>(m_Publishers[topic]);
             publisher->publish(message);
         }
+
+        void UnregisterPublisher(const std::string &topic) { m_Publishers[topic].reset(); }
+        void UnregisterSubscription(const std::string &topic) { m_Subsciptions[topic].reset(); }
 
     private:
         std::map<std::string, rclcpp::PublisherBase::SharedPtr> m_Publishers;

@@ -152,24 +152,48 @@ namespace jif
     // View Element Data
     struct ViewElementData
     {
+        ViewElementData(JIFManager &manager, const JIFCorePtr &core)
+            : Manager(manager), Core(core) {}
+
         virtual ~ViewElementData() {}
+
+        JIFManager &Manager;
+        JIFCorePtr Core;
     };
     typedef std::shared_ptr<ViewElementData> ViewElementDataPtr;
 
     struct TextData : ViewElementData
     {
+        TextData(JIFManager &manager, const JIFCorePtr &core)
+            : ViewElementData(manager, core) {}
+
+        ~TextData();
+
+        std::string Topic;
         std::string Label;
     };
     typedef std::shared_ptr<TextData> TextDataPtr;
 
     struct ButtonData : ViewElementData
     {
+        ButtonData(JIFManager &manager, const JIFCorePtr &core)
+            : ViewElementData(manager, core) {}
+
+        ~ButtonData();
+
+        std::string Topic;
         std::string Label;
     };
     typedef std::shared_ptr<ButtonData> ButtonDataPtr;
 
     struct ImageData : ViewElementData
     {
+        ImageData(JIFManager &manager, const JIFCorePtr &core)
+            : ViewElementData(manager, core) {}
+
+        ~ImageData();
+
+        std::string Topic;
         uint32_t TextureID;
         ImVec2 Size;
     };

@@ -28,6 +28,11 @@ void glfw_error_callback(int error_code, const char *description)
 
 void gl_debug_message_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
 {
+  (void)source;
+  (void)type;
+  (void)severity;
+  (void)length;
+  (void)userParam;
   printf("[GL 0x%08X] %s\r\n", id, message);
 }
 
@@ -83,6 +88,8 @@ int main(int argc, char **argv)
   { manager.SaveLayout(); };
   actions["layout.saveas"] = [&manager]()
   { manager.OpenSaveLayoutWizard(); };
+  actions["layout.reload"] = [&manager]()
+  { manager.ReloadLayout(); };
   actions["demo.click"] = []()
   { std::cout << "Hello World!" << std::endl; };
 
@@ -102,6 +109,7 @@ int main(int argc, char **argv)
   while (window.Spin() && rclcpp::ok())
   {
     manager.NotifyBeforeNewFrame();
+    window.SetSaved(!manager.HasChanges());
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -142,7 +150,7 @@ int main(int argc, char **argv)
         continue;
       if (ImGui::Begin(view->ImGuiID().c_str(), &view->IsOpen(), ImGuiWindowFlags_AlwaysAutoResize))
       {
-        auto type = resources.GetViewType(view->Type());
+        auto type = view->Type();
         if (type)
         {
           size_t i = 0;

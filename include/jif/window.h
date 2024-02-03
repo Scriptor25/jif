@@ -65,6 +65,8 @@ namespace jif
 
         void Register(const std::string &shortcut, const std::function<void()> &callback);
 
+        void SetSaved(bool saved);
+
     private:
         void SetSize(int width, int height);
 
@@ -75,6 +77,8 @@ namespace jif
 
     private:
         int m_Width, m_Height;
+        bool m_Saved;
+        std::string m_Title;
         GLFWwindow *m_GLFW;
 
         std::vector<std::function<void(int width, int height)>> m_WindowSizeCallbacks;
