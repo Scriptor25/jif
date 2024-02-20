@@ -96,22 +96,22 @@ namespace jif
         void LoadLayoutResource(const std::string layoutid);
         void ReloadLayout();
 
-        void OpenSaveLayoutWizard();
-        void OpenNewLayoutWizard();
-        void OpenLoadLayoutWizard();
+        void OpenSaveLayout();
+        void OpenNewLayout();
+        void OpenLoadLayout();
 
-        void OpenAddViewWizard();
+        void OpenAddView();
         void OpenViewManager();
 
-        void ShowSaveLayoutWizard();
-        void ShowNewLayoutWizard();
-        void ShowLoadLayoutWizard();
+        void ShowSaveLayout();
+        void ShowNewLayout();
+        void ShowLoadLayout();
 
         void ShowViewManager();
-        void ShowAddViewWizard();
+        void ShowAddView();
 
-        void ShowAddViewWizardName();
-        void ShowAddViewWizardType();
+        void ShowAddViewName();
+        void ShowAddViewType();
 
     private:
         void AddView(const std::string &id, const std::string &name, const ViewTypePtr &type, const std::map<std::string, std::string> &fields);

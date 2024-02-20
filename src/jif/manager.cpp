@@ -57,7 +57,7 @@ void jif::JIFManager::SaveLayout()
 {
     if (m_LayoutName.empty() || m_LayoutID.empty())
     {
-        OpenSaveLayoutWizard();
+        OpenSaveLayout();
         return;
     }
 
@@ -179,7 +179,7 @@ void jif::JIFManager::ReloadLayout()
                  true);
 }
 
-void jif::JIFManager::OpenSaveLayoutWizard()
+void jif::JIFManager::OpenSaveLayout()
 {
     m_SaveLayoutWizardOpen = true;
     m_LayoutNameBkp = m_LayoutName;
@@ -188,17 +188,17 @@ void jif::JIFManager::OpenSaveLayoutWizard()
     m_LayoutID.clear();
 }
 
-void jif::JIFManager::OpenNewLayoutWizard()
+void jif::JIFManager::OpenNewLayout()
 {
     m_NewLayoutWizardOpen = true;
 }
 
-void jif::JIFManager::OpenLoadLayoutWizard()
+void jif::JIFManager::OpenLoadLayout()
 {
     m_LoadLayoutWizardOpen = true;
 }
 
-void jif::JIFManager::OpenAddViewWizard()
+void jif::JIFManager::OpenAddView()
 {
     m_AddViewWizardOpen = true;
 }

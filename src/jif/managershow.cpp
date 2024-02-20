@@ -13,7 +13,7 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <jif/manager.h>
 
-void jif::JIFManager::ShowSaveLayoutWizard()
+void jif::JIFManager::ShowSaveLayout()
 {
     if (!m_SaveLayoutWizardOpen)
         return;
@@ -39,7 +39,7 @@ void jif::JIFManager::ShowSaveLayoutWizard()
     ImGui::End();
 }
 
-void jif::JIFManager::ShowNewLayoutWizard()
+void jif::JIFManager::ShowNewLayout()
 {
     if (!m_NewLayoutWizardOpen)
         return;
@@ -57,7 +57,7 @@ void jif::JIFManager::ShowNewLayoutWizard()
         if (ImGui::Button("Save"))
         {
             m_NewLayoutWizardOpen = false;
-            OpenSaveLayoutWizard();
+            OpenSaveLayout();
         }
         ImGui::SameLine();
         if (ImGui::Button("Dont Save"))
@@ -74,7 +74,7 @@ void jif::JIFManager::ShowNewLayoutWizard()
     ImGui::End();
 }
 
-void jif::JIFManager::ShowLoadLayoutWizard()
+void jif::JIFManager::ShowLoadLayout()
 {
     static std::string filename;
 
@@ -83,7 +83,7 @@ void jif::JIFManager::ShowLoadLayoutWizard()
 
     if (HasChanges())
     {
-        OpenNewLayoutWizard();
+        OpenNewLayout();
         return;
     }
 
@@ -150,7 +150,7 @@ void jif::JIFManager::ShowViewManager()
     ImGui::End();
 }
 
-void jif::JIFManager::ShowAddViewWizard()
+void jif::JIFManager::ShowAddView()
 {
     if (!m_AddViewWizardOpen)
         return;
@@ -160,11 +160,11 @@ void jif::JIFManager::ShowAddViewWizard()
         switch (m_AddViewWizardState)
         {
         case AddViewWizardState_Name:
-            ShowAddViewWizardName();
+            ShowAddViewName();
             break;
 
         case AddViewWizardState_Type:
-            ShowAddViewWizardType();
+            ShowAddViewType();
             break;
 
         default:
@@ -177,7 +177,7 @@ void jif::JIFManager::ShowAddViewWizard()
     ImGui::End();
 }
 
-void jif::JIFManager::ShowAddViewWizardName()
+void jif::JIFManager::ShowAddViewName()
 {
     ImGui::TextWrapped("This wizard will guide you through the process of adding a view.");
     ImGui::TextWrapped("First, please enter a name/label for your view:");
@@ -194,7 +194,7 @@ void jif::JIFManager::ShowAddViewWizardName()
     }
 }
 
-void jif::JIFManager::ShowAddViewWizardType()
+void jif::JIFManager::ShowAddViewType()
 {
     static int current = -1;
 

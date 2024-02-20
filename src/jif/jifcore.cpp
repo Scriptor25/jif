@@ -77,17 +77,17 @@ int main(int argc, char **argv)
   actions["file.exit"] = [&window]()
   { window.Close(); };
   actions["view.add"] = [&manager]()
-  { manager.OpenAddViewWizard(); };
+  { manager.OpenAddView(); };
   actions["view.manager"] = [&manager]()
   { manager.OpenViewManager(); };
   actions["layout.new"] = [&manager]()
-  { manager.OpenNewLayoutWizard(); };
+  { manager.OpenNewLayout(); };
   actions["layout.load"] = [&manager]()
-  { manager.OpenLoadLayoutWizard(); };
+  { manager.OpenLoadLayout(); };
   actions["layout.save"] = [&manager]()
   { manager.SaveLayout(); };
   actions["layout.saveas"] = [&manager]()
-  { manager.OpenSaveLayoutWizard(); };
+  { manager.OpenSaveLayout(); };
   actions["layout.reload"] = [&manager]()
   { manager.ReloadLayout(); };
   actions["demo.click"] = []()
@@ -137,10 +137,10 @@ int main(int argc, char **argv)
 
     ImGui::DockSpaceOverViewport(NULL, ImGuiDockNodeFlags_PassthruCentralNode);
 
-    manager.ShowSaveLayoutWizard();
-    manager.ShowNewLayoutWizard();
-    manager.ShowLoadLayoutWizard();
-    manager.ShowAddViewWizard();
+    manager.ShowSaveLayout();
+    manager.ShowNewLayout();
+    manager.ShowLoadLayout();
+    manager.ShowAddView();
     manager.ShowViewManager();
 
     for (auto &entry : manager.Views())
