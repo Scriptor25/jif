@@ -8,6 +8,7 @@
  * ------------------------------------------------------------
  */
 
+#include <geometry_msgs/msg/twist.hpp>
 #include <GL/glew.h>
 #include <imgui/imgui.h>
 #include <jif/resource.h>
@@ -18,44 +19,52 @@
 
 jif::TextData::~TextData()
 {
-    if (!Topic.empty())
-        Manager.Schedule([core = Core, topic = Topic]()
-                         { core->UnregisterSubscription(topic); });
+    Manager.SchedulePre([core = Core, topic = Topic]()
+                        { core->UnregisterSubscription(topic); });
 }
 
 jif::ButtonData::~ButtonData()
 {
-    if (!Topic.empty())
-        Manager.Schedule([core = Core, topic = Topic]()
-                         { core->UnregisterSubscription(topic); });
+    Manager.SchedulePre([core = Core, topic = Topic]()
+                        { core->UnregisterSubscription(topic); });
 }
 
 jif::ImageData::~ImageData()
 {
-    if (!Topic.empty())
-        Manager.Schedule([core = Core, topic = Topic]()
-                         { core->UnregisterSubscription(topic); });
+    Manager.SchedulePre([core = Core, topic = Topic]()
+                        { core->UnregisterSubscription(topic); });
     glDeleteTextures(1, &TextureID);
     TextureID = 0;
 }
 
-void jif::ElementText::Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
+jif::JoystickData::~JoystickData()
 {
-    (void)resources;
-    (void)fields;
+    Manager.SchedulePre(
+        [core = Core, status = StatusTopic, dest = DestTopic]()
+        {
+            core->UnregisterSubscription(status);
+            core->UnregisterPublisher(dest);
+        });
+}
 
-    if (!data)
+static std::string get(const std::string &value, std::map<std::string, std::string> &fields)
+{
+    return (value[0] == '$')
+               ? fields[value.substr(1)]
+               : value;
+}
+
+void jif::ElementText::Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const
+{
+    if (!args.Data)
     {
-        auto textdata = std::make_shared<TextData>(manager, core);
+        auto data = std::make_shared<TextData>(manager, args.Core);
 
-        auto value =
-            (Value[0] == '$')
-                ? fields[Value.substr(1)]
-                : Value;
+        auto value = get(Value, args.Fields);
 
         if (Source == "value")
         {
-            textdata->Label = value;
+            data->Label = value;
         }
         else if (Source == "file")
         {
@@ -65,39 +74,33 @@ void jif::ElementText::Show(JIFManager &manager, ResourceManager &resources, JIF
         }
         else if (Source == "ros")
         {
-            textdata->Topic = value;
-            core->RegisterSubscription<std_msgs::msg::String>(
+            data->Topic = value;
+            args.Core->RegisterSubscription<std_msgs::msg::String>(
                 value,
-                [&label = textdata->Label](const std_msgs::msg::String &msg)
+                [&label = data->Label](const std_msgs::msg::String &msg)
                 {
                     label = msg.data;
                 });
         }
 
-        data = textdata;
+        args.Data = data;
     }
 
-    auto textdata = std::dynamic_pointer_cast<TextData>(data);
-    ImGui::TextUnformatted(textdata->Label.c_str());
+    auto data = std::dynamic_pointer_cast<TextData>(args.Data);
+    ImGui::TextUnformatted(data->Label.c_str());
 }
 
-void jif::ElementButton::Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
+void jif::ElementButton::Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const
 {
-    (void)resources;
-    (void)fields;
-
-    if (!data)
+    if (!args.Data)
     {
-        auto buttondata = std::make_shared<ButtonData>(manager, core);
+        auto data = std::make_shared<ButtonData>(manager, args.Core);
 
-        auto value =
-            (TextValue[0] == '$')
-                ? fields[TextValue.substr(1)]
-                : TextValue;
+        auto value = get(TextValue, args.Fields);
 
         if (TextSource == "value")
         {
-            buttondata->Label = value;
+            data->Label = value;
         }
         else if (TextSource == "file")
         {
@@ -107,90 +110,105 @@ void jif::ElementButton::Show(JIFManager &manager, ResourceManager &resources, J
         }
         else if (TextSource == "ros")
         {
-            buttondata->Topic = value;
-            core->RegisterSubscription<std_msgs::msg::String>(
+            data->Topic = value;
+            args.Core->RegisterSubscription<std_msgs::msg::String>(
                 value,
-                [&label = buttondata->Label](const std_msgs::msg::String &msg)
+                [&label = data->Label](const std_msgs::msg::String &msg)
                 {
                     label = msg.data;
                 });
         }
 
-        data = buttondata;
+        args.Data = data;
     }
 
-    auto buttondata = std::dynamic_pointer_cast<ButtonData>(data);
-    if (ImGui::Button(buttondata->Label.c_str()))
-        ResourceManager::Action(Action);
+    auto data = std::dynamic_pointer_cast<ButtonData>(args.Data);
+    if (ImGui::Button(data->Label.c_str()))
+        ResourceManager::Action(Action, manager);
 }
 
-void jif::ElementImage::Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const
+void jif::ElementImage::Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const
 {
-    (void)resources;
-    (void)fields;
-
-    if (!data)
+    if (!args.Data)
     {
-        auto imagedata = std::make_shared<ImageData>(manager, core);
+        auto data = std::make_shared<ImageData>(manager, args.Core);
 
-        manager.Schedule(
-            [imagedata]()
+        manager.SchedulePre(
+            [data]()
             {
-                glGenTextures(1, &imagedata->TextureID);
-                glBindTexture(GL_TEXTURE_2D, imagedata->TextureID);
+                glGenTextures(1, &data->TextureID);
+                glBindTexture(GL_TEXTURE_2D, data->TextureID);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             });
 
-        auto value =
-            (Value[0] == '$')
-                ? fields[Value.substr(1)]
-                : Value;
+        auto value = get(Value, args.Fields);
 
         if (Source == "ros")
         {
-            imagedata->Topic = value;
-            core->RegisterSubscription<sensor_msgs::msg::CompressedImage>(
+            data->Topic = value;
+            args.Core->RegisterSubscription<sensor_msgs::msg::CompressedImage>(
                 value,
-                [&manager, imagedata](const sensor_msgs::msg::CompressedImage &msg)
+                [&manager, data](const sensor_msgs::msg::CompressedImage &msg)
                 {
-                    manager.Schedule(
-                        [msg, imagedata]()
+                    manager.SchedulePre(
+                        [msg, data]()
                         {
                             int width, height, channels;
-                            auto data = stbi_load_from_memory(msg.data.data(), msg.data.size(), &width, &height, &channels, 3);
-                            if (!data)
+                            auto pixels = stbi_load_from_memory(msg.data.data(), msg.data.size(), &width, &height, &channels, 3);
+                            if (!pixels)
                             {
                                 std::cerr << "[ElementImage] Failed to load image from compressed image message data" << std::endl;
                                 return;
                             }
 
-                            imagedata->Size.x = width;
-                            imagedata->Size.y = height;
+                            data->Size.x = width;
+                            data->Size.y = height;
 
-                            glBindTexture(GL_TEXTURE_2D, imagedata->TextureID);
-                            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+                            glBindTexture(GL_TEXTURE_2D, data->TextureID);
+                            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
                             glBindTexture(GL_TEXTURE_2D, 0);
 
-                            stbi_image_free(data);
+                            stbi_image_free(pixels);
                         });
                 });
         }
 
-        data = imagedata;
+        args.Data = data;
     }
 
-    auto imagedata = std::dynamic_pointer_cast<ImageData>(data);
+    auto data = std::dynamic_pointer_cast<ImageData>(args.Data);
 
-    auto iw = imagedata->Size.x;
-    auto ih = imagedata->Size.y;
+    auto iw = data->Size.x;
+    auto ih = data->Size.y;
     auto region = ImGui::GetContentRegionAvail();
     auto ww = region.x;
     auto wh = region.y;
 
     auto scale = std::min(ww / iw, wh / ih);
     ImVec2 size(scale * iw, scale * ih);
-    ImGui::Image((ImTextureID)(intptr_t)imagedata->TextureID, size);
+    ImGui::Image((ImTextureID)(intptr_t)data->TextureID, size);
+}
+
+void jif::ElementJoystick::Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const
+{
+    if (!args.Data)
+    {
+        auto data = std::make_shared<JoystickData>(manager, args.Core);
+
+        auto status = get(Status, args.Fields);
+        auto dest = get(Dest, args.Fields);
+
+        data->StatusTopic = status;
+        data->DestTopic = dest;
+
+        args.Core->RegisterSubscription<std_msgs::msg::String>(status, [](const std_msgs::msg::String &msg) {});
+        args.Core->RegisterPublisher<geometry_msgs::msg::Twist>(dest);
+
+        args.Data = data;
+    }
+
+    auto data = std::dynamic_pointer_cast<JoystickData>(args.Data);
 }

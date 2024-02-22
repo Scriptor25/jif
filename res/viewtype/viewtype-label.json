@@ -1,6 +1,7 @@
 {
     "type": "viewtype",
     "id": "label",
+    "label": "ROS Label",
     "elements": [
         {
             "type": "text",

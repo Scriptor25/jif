@@ -97,8 +97,8 @@ int main(int argc, char **argv)
   {
     auto menu = resources.GetMenu(menustr);
     for (auto &item : menu->Items)
-      window.Register(item->Alt, [action = item->Action]()
-                      { jif::ResourceManager::Action(action); });
+      window.Register(item->Alt, [action = item->Action, &manager]()
+                      { jif::ResourceManager::Action(action, manager); });
   }
 
   rclcpp::init(argc, argv);
@@ -108,12 +108,16 @@ int main(int argc, char **argv)
 
   while (window.Spin() && rclcpp::ok())
   {
-    manager.NotifyBeforeNewFrame();
+    manager.NotifyPreNewFrame();
+
     window.SetSaved(!manager.HasChanges());
+    window.SetFilename(manager.GetLayoutName());
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
+    manager.NotifyInNewFrame();
 
     if (ImGui::BeginMainMenuBar())
     {
@@ -127,7 +131,7 @@ int main(int argc, char **argv)
           {
             auto itemid = item->Name + "##" + menuid + '.' + item->Id;
             if (ImGui::MenuItem(itemid.c_str(), item->Alt.c_str()))
-              jif::ResourceManager::Action(item->Action);
+              jif::ResourceManager::Action(item->Action, manager);
           }
           ImGui::EndMenu();
         }
@@ -151,11 +155,11 @@ int main(int argc, char **argv)
       if (ImGui::Begin(view->ImGuiID().c_str(), &view->IsOpen() /*, ImGuiWindowFlags_AlwaysAutoResize*/))
       {
         auto type = view->Type();
-        if (type)
+        size_t i = 0;
+        for (auto &element : type->Elements)
         {
-          size_t i = 0;
-          for (auto &element : type->Elements)
-            element->Show(manager, resources, core, view->Fields(), view->Data(i++));
+          jif::ShowArgs showargs{core, view->Fields(), view->Data(i++)};
+          element->Show(manager, resources, showargs);
         }
       }
       ImGui::End();

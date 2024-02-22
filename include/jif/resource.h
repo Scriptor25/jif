@@ -199,17 +199,36 @@ namespace jif
     };
     typedef std::shared_ptr<ImageData> ImageDataPtr;
 
+    struct JoystickData : ViewElementData
+    {
+        JoystickData(JIFManager &manager, const JIFCorePtr &core)
+            : ViewElementData(manager, core) {}
+
+        ~JoystickData();
+
+        std::string StatusTopic;
+        std::string DestTopic;
+    };
+    typedef std::shared_ptr<JoystickData> JoystickDataPtr;
+
+    struct ShowArgs
+    {
+        JIFCorePtr Core;
+        std::map<std::string, std::string> &Fields;
+        ViewElementDataPtr &Data;
+    };
+
     // View Type Element
     struct ViewTypeElement
     {
         virtual ~ViewTypeElement() {}
-        virtual void Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const = 0;
+        virtual void Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const = 0;
     };
     typedef std::shared_ptr<ViewTypeElement> ViewTypeElementPtr;
 
     struct ElementText : ViewTypeElement
     {
-        void Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const override;
+        void Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const override;
 
         std::string Source;
         std::string Value;
@@ -218,7 +237,7 @@ namespace jif
 
     struct ElementButton : ViewTypeElement
     {
-        void Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const override;
+        void Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const override;
 
         std::string TextSource;
         std::string TextValue;
@@ -228,12 +247,21 @@ namespace jif
 
     struct ElementImage : ViewTypeElement
     {
-        void Show(JIFManager &manager, ResourceManager &resources, JIFCorePtr core, std::map<std::string, std::string> &fields, ViewElementDataPtr &data) const override;
+        void Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const override;
 
         std::string Source;
         std::string Value;
     };
     typedef std::shared_ptr<ElementImage> ElementImagePtr;
+
+    struct ElementJoystick : ViewTypeElement
+    {
+        void Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const override;
+
+        std::string Status;
+        std::string Dest;
+    };
+    typedef std::shared_ptr<ElementJoystick> ElementJoystickPtr;
 
     // View Type
     struct ViewTypeField
@@ -247,6 +275,7 @@ namespace jif
     struct ViewType
     {
         std::string Id;
+        std::string Label;
         std::vector<ViewTypeElementPtr> Elements;
         std::vector<ViewTypeFieldPtr> Fields;
     };
@@ -278,7 +307,7 @@ namespace jif
 
         const std::vector<ViewTypePtr> GetViewTypes();
 
-        static void Action(const std::string &id);
+        static void Action(const std::string &id, JIFManager &manager);
 
     private:
         void ScanDir(const std::filesystem::path &dir);
@@ -324,6 +353,7 @@ namespace jif
     void from_json(const nlohmann::json &json, ElementText &element);
     void from_json(const nlohmann::json &json, ElementButton &element);
     void from_json(const nlohmann::json &json, ElementImage &element);
+    void from_json(const nlohmann::json &json, ElementJoystick &element);
     void from_json(const nlohmann::json &json, ViewTypeField &field);
 
     void from_json(const nlohmann::json &json, DrawablePtr &drawable);

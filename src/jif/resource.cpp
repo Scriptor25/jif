@@ -76,10 +76,10 @@ const std::vector<jif::ViewTypePtr> jif::ResourceManager::GetViewTypes()
     return viewtypes;
 }
 
-void jif::ResourceManager::Action(const std::string &id)
+void jif::ResourceManager::Action(const std::string &id, JIFManager &manager)
 {
     if (auto action = ACTIONS[id])
-        action();
+        manager.ScheduleIn(action);
     else
         std::cerr << "[ResourceManager] Undefined action '" << id << "'" << std::endl;
 }

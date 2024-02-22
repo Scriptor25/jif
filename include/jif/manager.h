@@ -88,13 +88,18 @@ namespace jif
 
         std::map<std::string, JIFViewPtr> &Views() { return m_Views; }
 
-        void Schedule(const std::function<void()> &func, bool block = false);
-        void NotifyBeforeNewFrame();
+        void SchedulePre(const std::function<void()> &func);
+        void ScheduleIn(const std::function<void()> &func);
+
+        void NotifyPreNewFrame();
+        void NotifyInNewFrame();
 
         void SaveLayout();
         void LoadLayout(const std::string filename);
         void LoadLayoutResource(const std::string layoutid);
         void ReloadLayout();
+
+        const std::string &GetLayoutName() const { return m_LayoutName; }
 
         void OpenSaveLayout();
         void OpenNewLayout();
@@ -121,20 +126,13 @@ namespace jif
         bool m_HasChanges = false;
         ResourceManager &m_Resources;
 
-        bool m_Blocked = false;
-        std::vector<std::function<void()>> m_ScheduledTasks;
+        std::vector<std::function<void()>> m_ScheduledPre;
+        std::vector<std::function<void()>> m_ScheduledIn;
 
         std::string m_LayoutFilename;
 
         std::string m_LayoutID;
         std::string m_LayoutName;
-
-        std::string m_LayoutIDBkp;
-        std::string m_LayoutNameBkp;
-
-        bool m_SaveLayoutWizardOpen = false;
-        bool m_NewLayoutWizardOpen = false;
-        bool m_LoadLayoutWizardOpen = false;
 
         bool m_AddViewWizardOpen = false;
         bool m_ViewManagerOpen = false;

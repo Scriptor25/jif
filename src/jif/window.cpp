@@ -160,15 +160,31 @@ void jif::Window::SetSaved(bool saved)
     if (m_Saved == saved)
         return;
     m_Saved = saved;
+    UpdateTitle();
+}
 
-    auto title = m_Saved ? m_Title : m_Title + "*";
-    glfwSetWindowTitle(m_GLFW, title.c_str());
+void jif::Window::SetFilename(const std::string &filename)
+{
+    if (m_Filename == filename)
+        return;
+    m_Filename = filename;
+    UpdateTitle();
 }
 
 void jif::Window::SetSize(int width, int height)
 {
     m_Width = width;
     m_Height = height;
+}
+
+void jif::Window::UpdateTitle()
+{
+    std::string title = m_Title;
+    if (!m_Filename.empty())
+        title += " - " + m_Filename;
+    if (!m_Saved)
+        title += "*";
+    glfwSetWindowTitle(m_GLFW, title.c_str());
 }
 
 void jif::Window::GLFWWindowSizeCallback(GLFWwindow *window, int width, int height)

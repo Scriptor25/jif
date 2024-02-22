@@ -15,110 +15,115 @@
 
 void jif::JIFManager::ShowSaveLayout()
 {
-    if (!m_SaveLayoutWizardOpen)
-        return;
+    bool save_layout = false;
 
-    if (ImGui::Begin("Save Layout", &m_SaveLayoutWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
+    if (ImGui::BeginPopup("layout.save"))
     {
         ImGui::InputText("Name", &m_LayoutName);
         ImGui::InputText("ID", &m_LayoutID);
         ImGui::Separator();
         if (ImGui::Button("Save"))
         {
-            m_SaveLayoutWizardOpen = false;
-            SaveLayout();
+            ImGui::CloseCurrentPopup();
+            save_layout = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("Cancel"))
-        {
-            m_SaveLayoutWizardOpen = false;
-            m_LayoutName = m_LayoutNameBkp;
-            m_LayoutID = m_LayoutIDBkp;
-        }
+            ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
     }
-    ImGui::End();
+
+    if (save_layout)
+        SaveLayout();
 }
 
 void jif::JIFManager::ShowNewLayout()
 {
-    if (!m_NewLayoutWizardOpen)
-        return;
+    bool reset = false;
+    bool open_save_layout = false;
 
-    if (!HasChanges())
+    if (ImGui::BeginPopup("layout.new"))
     {
-        m_NewLayoutWizardOpen = false;
-        Reset();
-        return;
-    }
+        if (!HasChanges())
+        {
+            ImGui::CloseCurrentPopup();
+            reset = true;
+        }
 
-    if (ImGui::Begin("New Layout", &m_NewLayoutWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
-    {
         ImGui::TextUnformatted("You may have unsaved changes in the current layout. Do you want to save before you proceed?");
         if (ImGui::Button("Save"))
         {
-            m_NewLayoutWizardOpen = false;
-            OpenSaveLayout();
+            ImGui::CloseCurrentPopup();
+            open_save_layout = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("Dont Save"))
         {
-            m_NewLayoutWizardOpen = false;
-            Reset();
+            ImGui::CloseCurrentPopup();
+            reset = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("Cancel"))
         {
-            m_NewLayoutWizardOpen = false;
+            ImGui::CloseCurrentPopup();
         }
+        ImGui::EndPopup();
     }
-    ImGui::End();
+
+    if (reset)
+        Reset();
+    if (open_save_layout)
+        OpenSaveLayout();
 }
 
 void jif::JIFManager::ShowLoadLayout()
 {
     static std::string filename;
 
-    if (!m_LoadLayoutWizardOpen)
-        return;
+    bool open_new_layout = false;
+    bool load_layout_resource = false;
 
-    if (HasChanges())
+    if (ImGui::BeginPopup("layout.load"))
     {
-        OpenNewLayout();
-        return;
-    }
+        if (HasChanges())
+            open_new_layout = true;
 
-    if (ImGui::Begin("Load Layout", &m_LoadLayoutWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
-    {
         ImGui::InputText("File Name", &filename);
         ImGui::Separator();
         if (ImGui::Button("Load"))
         {
-            m_LoadLayoutWizardOpen = false;
+            ImGui::CloseCurrentPopup();
             std::filesystem::path filepath = filename;
             if (!filepath.has_extension())
             {
-                LoadLayoutResource(filename);
-                filename.clear();
+                load_layout_resource = true;
             }
             else
             {
-                Schedule(
+                SchedulePre(
                     [this]()
                     {
                         LoadLayout(filename);
                         filename.clear();
-                    },
-                    true);
+                    });
             }
         }
         ImGui::SameLine();
         if (ImGui::Button("Cancel"))
         {
-            m_LoadLayoutWizardOpen = false;
+            ImGui::CloseCurrentPopup();
             filename.clear();
         }
+        ImGui::EndPopup();
     }
-    ImGui::End();
+
+    if (open_new_layout)
+        OpenNewLayout();
+    if (load_layout_resource)
+    {
+        LoadLayoutResource(filename);
+        filename.clear();
+    }
 }
 
 void jif::JIFManager::ShowViewManager()
@@ -128,23 +133,36 @@ void jif::JIFManager::ShowViewManager()
 
     if (ImGui::Begin("View Manager", &m_ViewManagerOpen, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        std::vector<std::string> markedForRemoval;
+        std::string toremove;
+        std::string toedit;
         for (auto &entry : m_Views)
         {
             auto &view = entry.second;
             ImGui::Checkbox(view->ImGuiID().c_str(), &view->IsOpen());
+
             ImGui::SameLine();
-            auto buttonid = "Remove##" + view->ImGuiID();
-            if (ImGui::Button(buttonid.c_str()))
-                markedForRemoval.push_back(entry.first);
+            auto removeid = "Remove##" + view->ImGuiID();
+            if (ImGui::Button(removeid.c_str()))
+                toremove = entry.first;
+
+            ImGui::SameLine();
+            auto editid = "Edit##" + view->ImGuiID();
+            if (ImGui::Button(editid.c_str()))
+                toedit = entry.first;
         }
 
-        for (auto &key : markedForRemoval)
+        if (!toremove.empty())
         {
-            auto &view = m_Views[key];
+            auto &view = m_Views[toremove];
             ImGui::ClearWindowSettings(view->ImGuiID().c_str());
-            m_Views.erase(key);
+            m_Views.erase(toremove);
             SetHasChanges();
+        }
+
+        if (!toedit.empty())
+        {
+            auto &view = m_Views[toedit];
+            std::cout << "[ViewManager] TODO: open edit wizard for view " << view->Label() << " (" << view->ID() << ")" << std::endl;
         }
     }
     ImGui::End();
@@ -206,7 +224,7 @@ void jif::JIFManager::ShowAddViewType()
         for (size_t n = 0; n < viewtypes.size(); n++)
         {
             bool is_selected = (current == int(n));
-            if (ImGui::Selectable(viewtypes[n]->Id.c_str(), is_selected))
+            if (ImGui::Selectable(viewtypes[n]->Label.c_str(), is_selected))
                 current = n;
             if (is_selected)
                 ImGui::SetItemDefaultFocus();

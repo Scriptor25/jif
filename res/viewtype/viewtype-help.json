@@ -1,6 +1,7 @@
 {
     "type": "viewtype",
     "id": "help",
+    "label": "Help",
     "elements": [
         {
             "type": "text",

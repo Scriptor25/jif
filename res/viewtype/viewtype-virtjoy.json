@@ -1,0 +1,24 @@
+{
+    "type": "viewtype",
+    "id": "virtjoy",
+    "label": "ROS Virtual Joystick",
+    "elements": [
+        {
+            "type": "joystick",
+            "status": "$status",
+            "dest": "$dest"
+        }
+    ],
+    "fields": [
+        {
+            "id": "status",
+            "label": "Status Topic",
+            "default": ""
+        },
+        {
+            "id": "dest",
+            "label": "Destination Topic",
+            "default": ""
+        }
+    ]
+}
