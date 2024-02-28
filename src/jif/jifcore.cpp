@@ -144,19 +144,20 @@ int main(int argc, char **argv)
     manager.ShowSaveLayout();
     manager.ShowNewLayout();
     manager.ShowLoadLayout();
-    manager.ShowAddView();
     manager.ShowViewManager();
+    manager.ShowEditView();
+    manager.ShowAddView();
 
     for (auto &entry : manager.Views())
     {
-      auto &view = entry.second;
+      auto view = entry.second;
       if (!view->IsOpen())
         continue;
       if (ImGui::Begin(view->ImGuiID().c_str(), &view->IsOpen() /*, ImGuiWindowFlags_AlwaysAutoResize*/))
       {
         auto type = view->Type();
         size_t i = 0;
-        for (auto &element : type->Elements)
+        for (auto element : type->Elements)
         {
           jif::ShowArgs showargs{core, view->Fields(), view->Data(i++)};
           element->Show(manager, resources, showargs);

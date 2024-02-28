@@ -215,7 +215,7 @@ namespace jif
     {
         JIFCorePtr Core;
         std::map<std::string, std::string> &Fields;
-        ViewElementDataPtr &Data;
+        ViewElementDataPtr Data;
     };
 
     // View Type Element

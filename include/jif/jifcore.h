@@ -67,6 +67,7 @@ namespace jif
             }
             m_Publishers[topic].reset();
         }
+        
         void UnregisterSubscription(const std::string &topic)
         {
             if (topic.empty())

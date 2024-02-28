@@ -131,10 +131,11 @@ void jif::JIFManager::ShowViewManager()
     if (!m_ViewManagerOpen)
         return;
 
+    std::string toremove;
+    std::string toedit;
+
     if (ImGui::Begin("View Manager", &m_ViewManagerOpen, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        std::string toremove;
-        std::string toedit;
         for (auto &entry : m_Views)
         {
             auto &view = entry.second;
@@ -150,30 +151,89 @@ void jif::JIFManager::ShowViewManager()
             if (ImGui::Button(editid.c_str()))
                 toedit = entry.first;
         }
-
-        if (!toremove.empty())
-        {
-            auto &view = m_Views[toremove];
-            ImGui::ClearWindowSettings(view->ImGuiID().c_str());
-            m_Views.erase(toremove);
-            SetHasChanges();
-        }
-
-        if (!toedit.empty())
-        {
-            auto &view = m_Views[toedit];
-            std::cout << "[ViewManager] TODO: open edit wizard for view " << view->Label() << " (" << view->ID() << ")" << std::endl;
-        }
     }
     ImGui::End();
+
+    if (!toremove.empty())
+    {
+        auto view = m_Views[toremove];
+        ImGui::ClearWindowSettings(view->ImGuiID().c_str());
+        m_Views.erase(toremove);
+        SetHasChanges();
+    }
+    if (!toedit.empty())
+    {
+        auto view = m_Views[toedit];
+        OpenEditView(view);
+    }
+}
+
+void jif::JIFManager::ShowEditView()
+{
+    static std::map<std::string, std::string> fields;
+    static std::string label;
+    static JIFViewPtr view;
+
+    if (!m_EditViewOpen)
+    {
+        if (view)
+        {
+            fields.clear();
+            label.clear();
+            view = nullptr;
+        }
+        return;
+    }
+
+    bool apply = false;
+    bool done = false;
+
+    if (ImGui::Begin("Edit View", &m_EditViewOpen, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        if (!view)
+        {
+            view = m_EditViewView;
+            label = view->Label();
+            fields.clear();
+            for (auto &field : view->Type()->Fields)
+                fields[field->Id] = view->Fields()[field->Id];
+        }
+
+        ImGui::InputText("Label", &label);
+        ImGui::Separator();
+
+        for (auto &field : view->Type()->Fields)
+            ImGui::InputText(field->Label.c_str(), &fields[field->Id]);
+
+        apply = ImGui::Button("Apply");
+        ImGui::SameLine();
+        done = ImGui::Button("Done");
+    }
+    ImGui::End();
+
+    if (apply)
+    {
+        view->Label() = label;
+        for (auto &entry : fields)
+            view->Fields()[entry.first] = entry.second;
+        view->Data().clear();
+        SetHasChanges();
+    }
+    if (done)
+    {
+        fields.clear();
+        label.clear();
+        view = nullptr;
+        m_EditViewOpen = false;
+    }
 }
 
 void jif::JIFManager::ShowAddView()
 {
-    if (!m_AddViewWizardOpen)
+    if (!m_AddViewOpen)
         return;
 
-    if (ImGui::Begin("Add View", &m_AddViewWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
+    if (ImGui::Begin("Add View", &m_AddViewOpen, ImGuiWindowFlags_AlwaysAutoResize))
     {
         switch (m_AddViewWizardState)
         {
@@ -188,7 +248,7 @@ void jif::JIFManager::ShowAddView()
         default:
             m_AddViewWizardState = AddViewWizardState_Name;
             m_AddViewWizardData = {};
-            m_AddViewWizardOpen = false;
+            m_AddViewOpen = false;
             break;
         }
     }
@@ -219,7 +279,7 @@ void jif::JIFManager::ShowAddViewType()
     ImGui::TextWrapped("Please select one of the following view types:");
 
     auto viewtypes = m_Resources.GetViewTypes();
-    if (ImGui::BeginCombo("##typecombo", current < 0 ? nullptr : viewtypes[current]->Id.c_str()))
+    if (ImGui::BeginCombo("##typecombo", current < 0 ? nullptr : viewtypes[current]->Label.c_str()))
     {
         for (size_t n = 0; n < viewtypes.size(); n++)
         {

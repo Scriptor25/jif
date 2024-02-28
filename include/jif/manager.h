@@ -39,10 +39,11 @@ namespace jif
         bool &IsOpen() { return m_IsOpen; }
         bool IsOpen() const { return m_IsOpen; }
         const std::string &ID() const { return m_ID; }
+        std::string &Label() { return m_Label; }
         const std::string &Label() const { return m_Label; }
         ViewTypePtr Type() const { return m_Type; }
 
-        ViewElementDataPtr &Data(size_t i) { return m_Data[i]; }
+        ViewElementDataPtr Data(size_t i) { return m_Data[i]; }
         std::map<size_t, ViewElementDataPtr> &Data() { return m_Data; }
         std::map<std::string, std::string> &Fields() { return m_Fields; }
 
@@ -105,14 +106,16 @@ namespace jif
         void OpenNewLayout();
         void OpenLoadLayout();
 
-        void OpenAddView();
         void OpenViewManager();
+        void OpenEditView(const JIFViewPtr &view);
+        void OpenAddView();
 
         void ShowSaveLayout();
         void ShowNewLayout();
         void ShowLoadLayout();
 
         void ShowViewManager();
+        void ShowEditView();
         void ShowAddView();
 
         void ShowAddViewName();
@@ -130,16 +133,18 @@ namespace jif
         std::vector<std::function<void()>> m_ScheduledIn;
 
         std::string m_LayoutFilename;
-
         std::string m_LayoutID;
         std::string m_LayoutName;
 
-        bool m_AddViewWizardOpen = false;
-        bool m_ViewManagerOpen = false;
+        std::map<std::string, JIFViewPtr> m_Views;
 
+        bool m_AddViewOpen = false;
         AddViewWizardState m_AddViewWizardState;
         AddViewWizardData m_AddViewWizardData;
 
-        std::map<std::string, JIFViewPtr> m_Views;
+        bool m_EditViewOpen = false;
+        JIFViewPtr m_EditViewView;
+
+        bool m_ViewManagerOpen = false;
     };
 }

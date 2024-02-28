@@ -203,16 +203,22 @@ void jif::JIFManager::OpenLoadLayout()
     ImGui::OpenPopup("layout.load");
 }
 
+void jif::JIFManager::OpenViewManager()
+{
+    m_ViewManagerOpen = true;
+}
+
+void jif::JIFManager::OpenEditView(const JIFViewPtr &view)
+{
+    m_EditViewOpen = true;
+    m_EditViewView = view;
+}
+
 void jif::JIFManager::OpenAddView()
 {
     m_AddViewWizardState = AddViewWizardState_Name;
     m_AddViewWizardData = {};
-    m_AddViewWizardOpen = true;
-}
-
-void jif::JIFManager::OpenViewManager()
-{
-    m_ViewManagerOpen = true;
+    m_AddViewOpen = true;
 }
 
 void jif::JIFManager::Reset()
