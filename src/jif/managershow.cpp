@@ -131,8 +131,8 @@ void jif::JIFManager::ShowViewManager()
     if (!m_ViewManagerOpen)
         return;
 
-    std::string toremove;
-    std::string toedit;
+    std::string toremove = "";
+    std::string toedit = "";
 
     if (ImGui::Begin("View Manager", &m_ViewManagerOpen, ImGuiWindowFlags_AlwaysAutoResize))
     {

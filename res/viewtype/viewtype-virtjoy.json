@@ -4,6 +4,13 @@
     "label": "ROS Virtual Joystick",
     "elements": [
         {
+            "type": "text",
+            "text": {
+                "src": "ros",
+                "value": "$status"
+            }
+        },
+        {
             "type": "joystick",
             "status": "$status",
             "dest": "$dest"

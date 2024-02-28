@@ -43,7 +43,7 @@ namespace jif
         const std::string &Label() const { return m_Label; }
         ViewTypePtr Type() const { return m_Type; }
 
-        ViewElementDataPtr Data(size_t i) { return m_Data[i]; }
+        ViewElementDataPtr& Data(size_t i) { return m_Data[i]; }
         std::map<size_t, ViewElementDataPtr> &Data() { return m_Data; }
         std::map<std::string, std::string> &Fields() { return m_Fields; }
 
