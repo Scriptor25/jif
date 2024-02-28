@@ -43,7 +43,7 @@ namespace jif
         const std::string &Label() const { return m_Label; }
         ViewTypePtr Type() const { return m_Type; }
 
-        ViewElementDataPtr& Data(size_t i) { return m_Data[i]; }
+        ViewElementDataPtr &Data(size_t i) { return m_Data[i]; }
         std::map<size_t, ViewElementDataPtr> &Data() { return m_Data; }
         std::map<std::string, std::string> &Fields() { return m_Fields; }
 
@@ -102,6 +102,8 @@ namespace jif
 
         const std::string &GetLayoutName() const { return m_LayoutName; }
 
+        void OpenFileBrowser();
+
         void OpenSaveLayout();
         void OpenNewLayout();
         void OpenLoadLayout();
@@ -109,6 +111,8 @@ namespace jif
         void OpenViewManager();
         void OpenEditView(const JIFViewPtr &view);
         void OpenAddView();
+
+        void ShowFileBrowser();
 
         void ShowSaveLayout();
         void ShowNewLayout();
@@ -137,6 +141,8 @@ namespace jif
         std::string m_LayoutName;
 
         std::map<std::string, JIFViewPtr> m_Views;
+
+        bool m_FileBrowserOpen = false;
 
         bool m_AddViewOpen = false;
         AddViewWizardState m_AddViewWizardState;

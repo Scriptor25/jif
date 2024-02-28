@@ -8,7 +8,6 @@
  * ------------------------------------------------------------
  */
 
-#include <geometry_msgs/msg/twist.hpp>
 #include <GL/glew.h>
 #include <imgui/imgui.h>
 #include <jif/resource.h>
@@ -54,7 +53,7 @@ static std::string get(const std::string &value, std::map<std::string, std::stri
                : value;
 }
 
-void jif::ElementText::Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const
+void jif::ElementText::Show(JIFManager &manager, ResourceManager &resources, Window &window, ShowArgs &args) const
 {
     if (!args.Data)
     {
@@ -90,7 +89,7 @@ void jif::ElementText::Show(JIFManager &manager, ResourceManager &resources, Sho
     ImGui::TextUnformatted(data->Label.c_str());
 }
 
-void jif::ElementButton::Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const
+void jif::ElementButton::Show(JIFManager &manager, ResourceManager &resources, Window &window, ShowArgs &args) const
 {
     if (!args.Data)
     {
@@ -127,7 +126,7 @@ void jif::ElementButton::Show(JIFManager &manager, ResourceManager &resources, S
         ResourceManager::Action(Action, manager);
 }
 
-void jif::ElementImage::Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const
+void jif::ElementImage::Show(JIFManager &manager, ResourceManager &resources, Window &window, ShowArgs &args) const
 {
     if (!args.Data)
     {
@@ -192,7 +191,7 @@ void jif::ElementImage::Show(JIFManager &manager, ResourceManager &resources, Sh
     ImGui::Image((ImTextureID)(intptr_t)data->TextureID, size);
 }
 
-void jif::ElementJoystick::Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const
+void jif::ElementJoystick::Show(JIFManager &manager, ResourceManager &resources, Window &window, ShowArgs &args) const
 {
     if (!args.Data)
     {
@@ -207,8 +206,41 @@ void jif::ElementJoystick::Show(JIFManager &manager, ResourceManager &resources,
         args.Core->RegisterSubscription<std_msgs::msg::String>(status, [](const std_msgs::msg::String &msg) {});
         args.Core->RegisterPublisher<geometry_msgs::msg::Twist>(dest);
 
+        window.Register(
+            [&msg = data->Msg](int key, int scancode, int action, int mods) -> bool
+            {
+                if (key == GLFW_KEY_W && action == GLFW_PRESS)
+                {
+                    msg.linear.z = 1;
+                    return true;
+                }
+                if (key == GLFW_KEY_S && action == GLFW_PRESS)
+                {
+                    msg.linear.z = -1;
+                    return true;
+                }
+                if (key == GLFW_KEY_D && action == GLFW_PRESS)
+                {
+                    msg.angular.y = 1;
+                    return true;
+                }
+                if (key == GLFW_KEY_A && action == GLFW_PRESS)
+                {
+                    msg.angular.y = -1;
+                    return true;
+                }
+                if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+                {
+                    msg.linear.x = msg.angular.y = msg.angular.z = msg.linear.x = msg.linear.y = msg.linear.z = 0;
+                    return true;
+                }
+                return false;
+            });
+
         args.Data = data;
     }
 
     auto data = std::dynamic_pointer_cast<JoystickData>(args.Data);
+
+    args.Core->Publish(data->DestTopic, data->Msg);
 }

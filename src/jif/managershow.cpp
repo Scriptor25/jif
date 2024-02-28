@@ -13,6 +13,52 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <jif/manager.h>
 
+void jif::JIFManager::ShowFileBrowser()
+{
+    static std::filesystem::path path = std::filesystem::current_path();
+
+    if (!m_FileBrowserOpen)
+        return;
+
+    std::filesystem::path move;
+    std::filesystem::path open;
+
+    if (ImGui::Begin("File Browser", &m_FileBrowserOpen))
+    {
+        ImGui::TextUnformatted("..");
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+            move = path.parent_path();
+
+        for (auto entry : std::filesystem::directory_iterator(path))
+        {
+            ImGui::TextUnformatted(entry.path().filename().c_str());
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+            {
+                if (entry.is_directory())
+                    move = entry;
+                else
+                    open = entry;
+            }
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+                ImGui::OpenPopup("browser.extra");
+        }
+    }
+    ImGui::End();
+
+    if (!move.empty())
+        path = move;
+    if (!open.empty())
+    {
+        if (HasChanges())
+            OpenNewLayout();
+        SchedulePre(
+            [this, path = open.string()]()
+            {
+                LoadLayout(path);
+            });
+    }
+}
+
 void jif::JIFManager::ShowSaveLayout()
 {
     bool save_layout = false;

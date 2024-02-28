@@ -186,6 +186,11 @@ void jif::JIFManager::ReloadLayout()
                     { LoadLayout(m_LayoutFilename); });
 }
 
+void jif::JIFManager::OpenFileBrowser()
+{
+    m_FileBrowserOpen = true;
+}
+
 void jif::JIFManager::OpenSaveLayout()
 {
     ImGui::OpenPopup("layout.save");

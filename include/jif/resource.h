@@ -12,9 +12,11 @@
 
 #include "jifcore.h"
 #include "manager.h"
+#include "window.h"
 
 #include <filesystem>
 #include <fstream>
+#include <geometry_msgs/msg/twist.hpp>
 #include <imgui/imgui.h>
 #include <map>
 #include <memory>
@@ -208,6 +210,8 @@ namespace jif
 
         std::string StatusTopic;
         std::string DestTopic;
+
+        geometry_msgs::msg::Twist Msg;
     };
     typedef std::shared_ptr<JoystickData> JoystickDataPtr;
 
@@ -215,20 +219,20 @@ namespace jif
     {
         JIFCorePtr Core;
         std::map<std::string, std::string> &Fields;
-        ViewElementDataPtr& Data;
+        ViewElementDataPtr &Data;
     };
 
     // View Type Element
     struct ViewTypeElement
     {
         virtual ~ViewTypeElement() {}
-        virtual void Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const = 0;
+        virtual void Show(JIFManager &manager, ResourceManager &resources, Window &window, ShowArgs &args) const = 0;
     };
     typedef std::shared_ptr<ViewTypeElement> ViewTypeElementPtr;
 
     struct ElementText : ViewTypeElement
     {
-        void Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const override;
+        void Show(JIFManager &manager, ResourceManager &resources, Window &window, ShowArgs &args) const override;
 
         std::string Source;
         std::string Value;
@@ -237,7 +241,7 @@ namespace jif
 
     struct ElementButton : ViewTypeElement
     {
-        void Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const override;
+        void Show(JIFManager &manager, ResourceManager &resources, Window &window, ShowArgs &args) const override;
 
         std::string TextSource;
         std::string TextValue;
@@ -247,7 +251,7 @@ namespace jif
 
     struct ElementImage : ViewTypeElement
     {
-        void Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const override;
+        void Show(JIFManager &manager, ResourceManager &resources, Window &window, ShowArgs &args) const override;
 
         std::string Source;
         std::string Value;
@@ -256,7 +260,7 @@ namespace jif
 
     struct ElementJoystick : ViewTypeElement
     {
-        void Show(JIFManager &manager, ResourceManager &resources, ShowArgs &args) const override;
+        void Show(JIFManager &manager, ResourceManager &resources, Window &window, ShowArgs &args) const override;
 
         std::string Status;
         std::string Dest;

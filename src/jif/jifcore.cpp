@@ -76,6 +76,8 @@ int main(int argc, char **argv)
 
   actions["file.exit"] = [&window]()
   { window.Close(); };
+  actions["file.browser"] = [&manager]()
+  { manager.OpenFileBrowser(); };
   actions["view.add"] = [&manager]()
   { manager.OpenAddView(); };
   actions["view.manager"] = [&manager]()
@@ -141,6 +143,7 @@ int main(int argc, char **argv)
 
     ImGui::DockSpaceOverViewport(NULL, ImGuiDockNodeFlags_PassthruCentralNode);
 
+    manager.ShowFileBrowser();
     manager.ShowSaveLayout();
     manager.ShowNewLayout();
     manager.ShowLoadLayout();
@@ -160,7 +163,7 @@ int main(int argc, char **argv)
         for (auto element : type->Elements)
         {
           jif::ShowArgs showargs{core, view->Fields(), view->Data(i++)};
-          element->Show(manager, resources, showargs);
+          element->Show(manager, resources, window, showargs);
         }
       }
       ImGui::End();
