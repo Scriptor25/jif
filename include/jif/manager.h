@@ -39,6 +39,7 @@ namespace jif
         bool &IsOpen() { return m_IsOpen; }
         bool IsOpen() const { return m_IsOpen; }
         const std::string &ID() const { return m_ID; }
+        std::string &Label() { return m_Label; }
         const std::string &Label() const { return m_Label; }
         ViewTypePtr Type() const { return m_Type; }
 
@@ -88,30 +89,41 @@ namespace jif
 
         std::map<std::string, JIFViewPtr> &Views() { return m_Views; }
 
-        void Schedule(const std::function<void()> &func, bool block = false);
-        void NotifyBeforeNewFrame();
+        void SchedulePre(const std::function<void()> &func);
+        void ScheduleIn(const std::function<void()> &func);
+
+        void NotifyPreNewFrame();
+        void NotifyInNewFrame();
 
         void SaveLayout();
         void LoadLayout(const std::string filename);
         void LoadLayoutResource(const std::string layoutid);
         void ReloadLayout();
 
-        void OpenSaveLayoutWizard();
-        void OpenNewLayoutWizard();
-        void OpenLoadLayoutWizard();
+        const std::string &GetLayoutName() const { return m_LayoutName; }
 
-        void OpenAddViewWizard();
+        void OpenFileBrowser();
+
+        void OpenSaveLayout();
+        void OpenNewLayout();
+        void OpenLoadLayout();
+
         void OpenViewManager();
+        void OpenEditView(const JIFViewPtr &view);
+        void OpenAddView();
 
-        void ShowSaveLayoutWizard();
-        void ShowNewLayoutWizard();
-        void ShowLoadLayoutWizard();
+        void ShowFileBrowser();
+
+        void ShowSaveLayout();
+        void ShowNewLayout();
+        void ShowLoadLayout();
 
         void ShowViewManager();
-        void ShowAddViewWizard();
+        void ShowEditView();
+        void ShowAddView();
 
-        void ShowAddViewWizardName();
-        void ShowAddViewWizardType();
+        void ShowAddViewName();
+        void ShowAddViewType();
 
     private:
         void AddView(const std::string &id, const std::string &name, const ViewTypePtr &type, const std::map<std::string, std::string> &fields);
@@ -121,27 +133,24 @@ namespace jif
         bool m_HasChanges = false;
         ResourceManager &m_Resources;
 
-        bool m_Blocked = false;
-        std::vector<std::function<void()>> m_ScheduledTasks;
+        std::vector<std::function<void()>> m_ScheduledPre;
+        std::vector<std::function<void()>> m_ScheduledIn;
 
         std::string m_LayoutFilename;
-
         std::string m_LayoutID;
         std::string m_LayoutName;
 
-        std::string m_LayoutIDBkp;
-        std::string m_LayoutNameBkp;
+        std::map<std::string, JIFViewPtr> m_Views;
 
-        bool m_SaveLayoutWizardOpen = false;
-        bool m_NewLayoutWizardOpen = false;
-        bool m_LoadLayoutWizardOpen = false;
+        bool m_FileBrowserOpen = false;
 
-        bool m_AddViewWizardOpen = false;
-        bool m_ViewManagerOpen = false;
-
+        bool m_AddViewOpen = false;
         AddViewWizardState m_AddViewWizardState;
         AddViewWizardData m_AddViewWizardData;
 
-        std::map<std::string, JIFViewPtr> m_Views;
+        bool m_EditViewOpen = false;
+        JIFViewPtr m_EditViewView;
+
+        bool m_ViewManagerOpen = false;
     };
 }

@@ -9,6 +9,13 @@
             "name": "Exit",
             "alt": "alt+f4|esc",
             "action": "file.exit"
+        },
+        {
+            "type": "menuitem",
+            "id": "file.browser",
+            "name": "File Browser",
+            "alt": "alt+b",
+            "action": "file.browser"
         }
     ]
 }

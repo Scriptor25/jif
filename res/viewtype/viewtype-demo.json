@@ -1,6 +1,7 @@
 {
     "type": "viewtype",
     "id": "demo",
+    "label": "Demo",
     "elements": [
         {
             "type": "text",

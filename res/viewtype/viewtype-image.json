@@ -1,6 +1,7 @@
 {
     "type": "viewtype",
     "id": "image",
+    "label": "ROS Image",
     "elements": [
         {
             "type": "image",

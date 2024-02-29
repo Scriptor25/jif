@@ -13,112 +13,163 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <jif/manager.h>
 
-void jif::JIFManager::ShowSaveLayoutWizard()
+void jif::JIFManager::ShowFileBrowser()
 {
-    if (!m_SaveLayoutWizardOpen)
+    static std::filesystem::path path = std::filesystem::current_path();
+
+    if (!m_FileBrowserOpen)
         return;
 
-    if (ImGui::Begin("Save Layout", &m_SaveLayoutWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
+    std::filesystem::path move;
+    std::filesystem::path open;
+
+    if (ImGui::Begin("File Browser", &m_FileBrowserOpen))
+    {
+        ImGui::TextUnformatted("..");
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+            move = path.parent_path();
+
+        for (auto entry : std::filesystem::directory_iterator(path))
+        {
+            ImGui::TextUnformatted(entry.path().filename().c_str());
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+            {
+                if (entry.is_directory())
+                    move = entry;
+                else
+                    open = entry;
+            }
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+                ImGui::OpenPopup("browser.extra");
+        }
+    }
+    ImGui::End();
+
+    if (!move.empty())
+        path = move;
+    if (!open.empty())
+    {
+        if (HasChanges())
+            OpenNewLayout();
+        SchedulePre(
+            [this, path = open.string()]()
+            {
+                LoadLayout(path);
+            });
+    }
+}
+
+void jif::JIFManager::ShowSaveLayout()
+{
+    bool save_layout = false;
+
+    if (ImGui::BeginPopup("layout.save"))
     {
         ImGui::InputText("Name", &m_LayoutName);
         ImGui::InputText("ID", &m_LayoutID);
         ImGui::Separator();
         if (ImGui::Button("Save"))
         {
-            m_SaveLayoutWizardOpen = false;
-            SaveLayout();
+            ImGui::CloseCurrentPopup();
+            save_layout = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("Cancel"))
-        {
-            m_SaveLayoutWizardOpen = false;
-            m_LayoutName = m_LayoutNameBkp;
-            m_LayoutID = m_LayoutIDBkp;
-        }
+            ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
     }
-    ImGui::End();
+
+    if (save_layout)
+        SaveLayout();
 }
 
-void jif::JIFManager::ShowNewLayoutWizard()
+void jif::JIFManager::ShowNewLayout()
 {
-    if (!m_NewLayoutWizardOpen)
-        return;
+    bool reset = false;
+    bool open_save_layout = false;
 
-    if (!HasChanges())
+    if (ImGui::BeginPopup("layout.new"))
     {
-        m_NewLayoutWizardOpen = false;
-        Reset();
-        return;
-    }
+        if (!HasChanges())
+        {
+            ImGui::CloseCurrentPopup();
+            reset = true;
+        }
 
-    if (ImGui::Begin("New Layout", &m_NewLayoutWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
-    {
         ImGui::TextUnformatted("You may have unsaved changes in the current layout. Do you want to save before you proceed?");
         if (ImGui::Button("Save"))
         {
-            m_NewLayoutWizardOpen = false;
-            OpenSaveLayoutWizard();
+            ImGui::CloseCurrentPopup();
+            open_save_layout = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("Dont Save"))
         {
-            m_NewLayoutWizardOpen = false;
-            Reset();
+            ImGui::CloseCurrentPopup();
+            reset = true;
         }
         ImGui::SameLine();
         if (ImGui::Button("Cancel"))
         {
-            m_NewLayoutWizardOpen = false;
+            ImGui::CloseCurrentPopup();
         }
+        ImGui::EndPopup();
     }
-    ImGui::End();
+
+    if (reset)
+        Reset();
+    if (open_save_layout)
+        OpenSaveLayout();
 }
 
-void jif::JIFManager::ShowLoadLayoutWizard()
+void jif::JIFManager::ShowLoadLayout()
 {
     static std::string filename;
 
-    if (!m_LoadLayoutWizardOpen)
-        return;
+    bool open_new_layout = false;
+    bool load_layout_resource = false;
 
-    if (HasChanges())
+    if (ImGui::BeginPopup("layout.load"))
     {
-        OpenNewLayoutWizard();
-        return;
-    }
+        if (HasChanges())
+            open_new_layout = true;
 
-    if (ImGui::Begin("Load Layout", &m_LoadLayoutWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
-    {
         ImGui::InputText("File Name", &filename);
         ImGui::Separator();
         if (ImGui::Button("Load"))
         {
-            m_LoadLayoutWizardOpen = false;
+            ImGui::CloseCurrentPopup();
             std::filesystem::path filepath = filename;
             if (!filepath.has_extension())
             {
-                LoadLayoutResource(filename);
-                filename.clear();
+                load_layout_resource = true;
             }
             else
             {
-                Schedule(
+                SchedulePre(
                     [this]()
                     {
                         LoadLayout(filename);
                         filename.clear();
-                    },
-                    true);
+                    });
             }
         }
         ImGui::SameLine();
         if (ImGui::Button("Cancel"))
         {
-            m_LoadLayoutWizardOpen = false;
+            ImGui::CloseCurrentPopup();
             filename.clear();
         }
+        ImGui::EndPopup();
     }
-    ImGui::End();
+
+    if (open_new_layout)
+        OpenNewLayout();
+    if (load_layout_resource)
+    {
+        LoadLayoutResource(filename);
+        filename.clear();
+    }
 }
 
 void jif::JIFManager::ShowViewManager()
@@ -126,58 +177,131 @@ void jif::JIFManager::ShowViewManager()
     if (!m_ViewManagerOpen)
         return;
 
+    std::string toremove = "";
+    std::string toedit = "";
+
     if (ImGui::Begin("View Manager", &m_ViewManagerOpen, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        std::vector<std::string> markedForRemoval;
         for (auto &entry : m_Views)
         {
             auto &view = entry.second;
             ImGui::Checkbox(view->ImGuiID().c_str(), &view->IsOpen());
-            ImGui::SameLine();
-            auto buttonid = "Remove##" + view->ImGuiID();
-            if (ImGui::Button(buttonid.c_str()))
-                markedForRemoval.push_back(entry.first);
-        }
 
-        for (auto &key : markedForRemoval)
-        {
-            auto &view = m_Views[key];
-            ImGui::ClearWindowSettings(view->ImGuiID().c_str());
-            m_Views.erase(key);
-            SetHasChanges();
+            ImGui::SameLine();
+            auto removeid = "Remove##" + view->ImGuiID();
+            if (ImGui::Button(removeid.c_str()))
+                toremove = entry.first;
+
+            ImGui::SameLine();
+            auto editid = "Edit##" + view->ImGuiID();
+            if (ImGui::Button(editid.c_str()))
+                toedit = entry.first;
         }
     }
     ImGui::End();
+
+    if (!toremove.empty())
+    {
+        auto view = m_Views[toremove];
+        ImGui::ClearWindowSettings(view->ImGuiID().c_str());
+        m_Views.erase(toremove);
+        SetHasChanges();
+    }
+    if (!toedit.empty())
+    {
+        auto view = m_Views[toedit];
+        OpenEditView(view);
+    }
 }
 
-void jif::JIFManager::ShowAddViewWizard()
+void jif::JIFManager::ShowEditView()
 {
-    if (!m_AddViewWizardOpen)
+    static std::map<std::string, std::string> fields;
+    static std::string label;
+    static JIFViewPtr view;
+
+    if (!m_EditViewOpen)
+    {
+        if (view)
+        {
+            fields.clear();
+            label.clear();
+            view = nullptr;
+        }
+        return;
+    }
+
+    bool apply = false;
+    bool done = false;
+
+    if (ImGui::Begin("Edit View", &m_EditViewOpen, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        if (!view)
+        {
+            view = m_EditViewView;
+            label = view->Label();
+            fields.clear();
+            for (auto &field : view->Type()->Fields)
+                fields[field->Id] = view->Fields()[field->Id];
+        }
+
+        ImGui::InputText("Label", &label);
+        ImGui::Separator();
+
+        for (auto &field : view->Type()->Fields)
+            ImGui::InputText(field->Label.c_str(), &fields[field->Id]);
+
+        apply = ImGui::Button("Apply");
+        ImGui::SameLine();
+        done = ImGui::Button("Done");
+    }
+    ImGui::End();
+
+    if (apply)
+    {
+        view->Label() = label;
+        for (auto &entry : fields)
+            view->Fields()[entry.first] = entry.second;
+        view->Data().clear();
+        SetHasChanges();
+    }
+    if (done)
+    {
+        fields.clear();
+        label.clear();
+        view = nullptr;
+        m_EditViewOpen = false;
+    }
+}
+
+void jif::JIFManager::ShowAddView()
+{
+    if (!m_AddViewOpen)
         return;
 
-    if (ImGui::Begin("Add View", &m_AddViewWizardOpen, ImGuiWindowFlags_AlwaysAutoResize))
+    if (ImGui::Begin("Add View", &m_AddViewOpen, ImGuiWindowFlags_AlwaysAutoResize))
     {
         switch (m_AddViewWizardState)
         {
         case AddViewWizardState_Name:
-            ShowAddViewWizardName();
+            ShowAddViewName();
             break;
 
         case AddViewWizardState_Type:
-            ShowAddViewWizardType();
+            ShowAddViewType();
             break;
 
         default:
             m_AddViewWizardState = AddViewWizardState_Name;
             m_AddViewWizardData = {};
-            m_AddViewWizardOpen = false;
+            m_AddViewOpen = false;
             break;
         }
     }
     ImGui::End();
 }
 
-void jif::JIFManager::ShowAddViewWizardName()
+void jif::JIFManager::ShowAddViewName()
 {
     ImGui::TextWrapped("This wizard will guide you through the process of adding a view.");
     ImGui::TextWrapped("First, please enter a name/label for your view:");
@@ -194,19 +318,19 @@ void jif::JIFManager::ShowAddViewWizardName()
     }
 }
 
-void jif::JIFManager::ShowAddViewWizardType()
+void jif::JIFManager::ShowAddViewType()
 {
     static int current = -1;
 
     ImGui::TextWrapped("Please select one of the following view types:");
 
     auto viewtypes = m_Resources.GetViewTypes();
-    if (ImGui::BeginCombo("##typecombo", current < 0 ? nullptr : viewtypes[current]->Id.c_str()))
+    if (ImGui::BeginCombo("##typecombo", current < 0 ? nullptr : viewtypes[current]->Label.c_str()))
     {
         for (size_t n = 0; n < viewtypes.size(); n++)
         {
             bool is_selected = (current == int(n));
-            if (ImGui::Selectable(viewtypes[n]->Id.c_str(), is_selected))
+            if (ImGui::Selectable(viewtypes[n]->Label.c_str(), is_selected))
                 current = n;
             if (is_selected)
                 ImGui::SetItemDefaultFocus();

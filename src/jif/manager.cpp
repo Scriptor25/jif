@@ -37,27 +37,35 @@ void jif::JIFManager::SetHasChanges()
     m_HasChanges = true;
 }
 
-void jif::JIFManager::Schedule(const std::function<void()> &func, bool block)
+void jif::JIFManager::SchedulePre(const std::function<void()> &func)
 {
-    if (m_Blocked)
-        return;
-    m_Blocked = block;
-    m_ScheduledTasks.push_back(func);
+    m_ScheduledPre.push_back(func);
 }
 
-void jif::JIFManager::NotifyBeforeNewFrame()
+void jif::JIFManager::ScheduleIn(const std::function<void()> &func)
 {
-    for (auto &task : m_ScheduledTasks)
+    m_ScheduledIn.push_back(func);
+}
+
+void jif::JIFManager::NotifyPreNewFrame()
+{
+    for (auto &task : m_ScheduledPre)
         task();
-    m_Blocked = false;
-    m_ScheduledTasks.clear();
+    m_ScheduledPre.clear();
+}
+
+void jif::JIFManager::NotifyInNewFrame()
+{
+    for (auto &task : m_ScheduledIn)
+        task();
+    m_ScheduledIn.clear();
 }
 
 void jif::JIFManager::SaveLayout()
 {
     if (m_LayoutName.empty() || m_LayoutID.empty())
     {
-        OpenSaveLayoutWizard();
+        OpenSaveLayout();
         return;
     }
 
@@ -174,33 +182,30 @@ void jif::JIFManager::ReloadLayout()
     if (!filepath.has_extension())
         LoadLayoutResource(m_LayoutFilename);
     else
-        Schedule([this]()
-                 { LoadLayout(m_LayoutFilename); },
-                 true);
+        SchedulePre([this]()
+                    { LoadLayout(m_LayoutFilename); });
 }
 
-void jif::JIFManager::OpenSaveLayoutWizard()
+void jif::JIFManager::OpenFileBrowser()
 {
-    m_SaveLayoutWizardOpen = true;
-    m_LayoutNameBkp = m_LayoutName;
-    m_LayoutIDBkp = m_LayoutID;
+    m_FileBrowserOpen = true;
+}
+
+void jif::JIFManager::OpenSaveLayout()
+{
+    ImGui::OpenPopup("layout.save");
     m_LayoutName.clear();
     m_LayoutID.clear();
 }
 
-void jif::JIFManager::OpenNewLayoutWizard()
+void jif::JIFManager::OpenNewLayout()
 {
-    m_NewLayoutWizardOpen = true;
+    ImGui::OpenPopup("layout.new");
 }
 
-void jif::JIFManager::OpenLoadLayoutWizard()
+void jif::JIFManager::OpenLoadLayout()
 {
-    m_LoadLayoutWizardOpen = true;
-}
-
-void jif::JIFManager::OpenAddViewWizard()
-{
-    m_AddViewWizardOpen = true;
+    ImGui::OpenPopup("layout.load");
 }
 
 void jif::JIFManager::OpenViewManager()
@@ -208,12 +213,25 @@ void jif::JIFManager::OpenViewManager()
     m_ViewManagerOpen = true;
 }
 
+void jif::JIFManager::OpenEditView(const JIFViewPtr &view)
+{
+    m_EditViewOpen = true;
+    m_EditViewView = view;
+}
+
+void jif::JIFManager::OpenAddView()
+{
+    m_AddViewWizardState = AddViewWizardState_Name;
+    m_AddViewWizardData = {};
+    m_AddViewOpen = true;
+}
+
 void jif::JIFManager::Reset()
 {
     m_LayoutID.clear();
     m_LayoutName.clear();
     m_Views.clear();
-    m_ScheduledTasks.clear();
+    m_ScheduledPre.clear();
     m_LayoutFilename.clear();
     ImGui::ClearIniSettings();
     SetNoChanges();
