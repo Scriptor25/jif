@@ -38,12 +38,12 @@ jif::ImageData::~ImageData()
 
 jif::JoystickData::~JoystickData()
 {
-    Manager.SchedulePre(
-        [core = Core, status = StatusTopic, dest = DestTopic]()
-        {
-            core->UnregisterSubscription(status);
-            core->UnregisterPublisher(dest);
-        });
+    Manager.SchedulePre([core = Core, topic = Topic]()
+                        { core->UnregisterPublisher(topic); });
+}
+
+jif::SelectorData::~SelectorData()
+{
 }
 
 static std::string get(const std::string &value, std::map<std::string, std::string> &fields)
@@ -197,44 +197,47 @@ void jif::ElementJoystick::Show(JIFManager &manager, ResourceManager &resources,
     {
         auto data = std::make_shared<JoystickData>(manager, args.Core);
 
-        auto status = get(Status, args.Fields);
-        auto dest = get(Dest, args.Fields);
-
-        data->StatusTopic = status;
-        data->DestTopic = dest;
-
-        args.Core->RegisterSubscription<std_msgs::msg::String>(status, [](const std_msgs::msg::String &msg) {});
-        args.Core->RegisterPublisher<geometry_msgs::msg::Twist>(dest);
+        data->Topic = get(Dest, args.Fields);
+        args.Core->RegisterPublisher<geometry_msgs::msg::Twist>(data->Topic);
 
         window.Register(
-            [&msg = data->Msg](int key, int scancode, int action, int mods) -> bool
+            [&core = args.Core, &topic = data->Topic, &msg = data->Msg](int key, int scancode, int action, int mods) -> bool
             {
-                if (key == GLFW_KEY_W && action == GLFW_PRESS)
+                bool send = false;
+
+                if (action == GLFW_PRESS)
                 {
-                    msg.linear.z = 1;
-                    return true;
+                    if (key == GLFW_KEY_W)
+                    {
+                        msg.linear.x = 1;
+                        send = true;
+                    }
+                    if (key == GLFW_KEY_S)
+                    {
+                        msg.linear.x = -1;
+                        send = true;
+                    }
+                    if (key == GLFW_KEY_D)
+                    {
+                        msg.angular.z = -1;
+                        send = true;
+                    }
+                    if (key == GLFW_KEY_A)
+                    {
+                        msg.angular.z = 1;
+                        send = true;
+                    }
+                    if (key == GLFW_KEY_Q)
+                    {
+                        msg.linear.x = msg.angular.y = msg.angular.z = msg.linear.x = msg.linear.y = msg.linear.z = 0;
+                        send = true;
+                    }
+
+                    if (send)
+                        core->Publish(topic, msg);
                 }
-                if (key == GLFW_KEY_S && action == GLFW_PRESS)
-                {
-                    msg.linear.z = -1;
-                    return true;
-                }
-                if (key == GLFW_KEY_D && action == GLFW_PRESS)
-                {
-                    msg.angular.y = 1;
-                    return true;
-                }
-                if (key == GLFW_KEY_A && action == GLFW_PRESS)
-                {
-                    msg.angular.y = -1;
-                    return true;
-                }
-                if (key == GLFW_KEY_Q && action == GLFW_PRESS)
-                {
-                    msg.linear.x = msg.angular.y = msg.angular.z = msg.linear.x = msg.linear.y = msg.linear.z = 0;
-                    return true;
-                }
-                return false;
+
+                return send;
             });
 
         args.Data = data;
@@ -242,5 +245,96 @@ void jif::ElementJoystick::Show(JIFManager &manager, ResourceManager &resources,
 
     auto data = std::dynamic_pointer_cast<JoystickData>(args.Data);
 
-    args.Core->Publish(data->DestTopic, data->Msg);
+    auto preview = glfwGetJoystickName(data->Selected);
+    if (ImGui::BeginCombo("##joyselector", preview ? preview : "<disconnected>"))
+    {
+        for (size_t i = 0; i < 16; i++)
+        {
+            ImGui::PushID(i);
+            bool is_selected = (data->Selected == i);
+            auto joyname = glfwGetJoystickName(i);
+            if (ImGui::Selectable(joyname ? joyname : "<disconnected>", is_selected))
+                data->Selected = i;
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+            ImGui::PopID();
+        }
+        ImGui::EndCombo();
+    }
+
+    if (glfwJoystickPresent(data->Selected))
+    {
+        int axescount;
+        auto axes = glfwGetJoystickAxes(data->Selected, &axescount);
+
+        // int buttonscount;
+        // auto buttons = glfwGetJoystickButtons(data->Selected, &buttonscount);
+
+        /*for (int d = 0; d < axescount; d++)
+            std::cout << "[" << d << "] " << axes[d] << " ";
+        std::cout << std::endl;
+
+        for (int d = 0; d < buttonscount; d++)
+            std::cout << "[" << d << "] " << (buttons[d] ? "1" : "0") << " ";
+        std::cout << std::endl;*/
+
+        // axes[0]; // horizontal left
+        // axes[1]; // vertical left
+        // axes[3]; // horizontal right
+        // axes[4]; // vertical right
+        // buttons[0]; // A
+        // buttons[1]; // B
+
+        bool change = false;
+        if (abs(data->Horizontal - axes[0]) > 0.1f)
+        {
+            data->Horizontal = floor(axes[0] * 10.0f) / 10.0f;
+            change = true;
+        }
+        if (abs(data->Vertical - axes[1]) > 0.1f)
+        {
+            data->Vertical = floor(axes[1] * 10.0f) / 10.0f;
+            change = true;
+        }
+
+        if (change)
+        {
+            data->Msg.linear.x = -data->Vertical;
+            data->Msg.angular.z = -data->Horizontal;
+
+            data->Core->Publish(data->Topic, data->Msg);
+        }
+    }
+}
+
+void jif::ElementSelector::Show(JIFManager &manager, ResourceManager &resources, Window &window, ShowArgs &args) const
+{
+    if (!args.Data)
+    {
+        auto data = std::make_shared<SelectorData>(manager, args.Core);
+
+        auto value = std::stoull(get(Source, args.Fields));
+        if (Source == "value")
+        {
+            data->Selected = value;
+        }
+
+        args.Data = data;
+    }
+
+    auto data = std::dynamic_pointer_cast<SelectorData>(args.Data);
+
+    if (ImGui::BeginCombo("", ""))
+    {
+        for (size_t i = 0; i < Items; i++)
+        {
+            bool is_selected = (data->Selected == i);
+            if (ImGui::Selectable(std::to_string(i).c_str(), is_selected))
+                data->Selected = i;
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndCombo();
+    }
 }

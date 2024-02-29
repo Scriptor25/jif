@@ -208,12 +208,25 @@ namespace jif
 
         ~JoystickData();
 
-        std::string StatusTopic;
-        std::string DestTopic;
-
+        std::string Topic;
+        size_t Selected = 0;
         geometry_msgs::msg::Twist Msg;
+
+        float Horizontal = 0, Vertical = 0;
+        bool A = false, B = false;
     };
     typedef std::shared_ptr<JoystickData> JoystickDataPtr;
+
+    struct SelectorData : ViewElementData
+    {
+        SelectorData(JIFManager &manager, const JIFCorePtr &core)
+            : ViewElementData(manager, core) {}
+
+        ~SelectorData();
+
+        size_t Selected;
+    };
+    typedef std::shared_ptr<SelectorData> SelectorDataPtr;
 
     struct ShowArgs
     {
@@ -266,6 +279,16 @@ namespace jif
         std::string Dest;
     };
     typedef std::shared_ptr<ElementJoystick> ElementJoystickPtr;
+
+    struct ElementSelector : ViewTypeElement
+    {
+        void Show(JIFManager &manager, ResourceManager &resources, Window &window, ShowArgs &args) const override;
+
+        std::string Source;
+        std::string Value;
+        size_t Items;
+    };
+    typedef std::shared_ptr<ElementSelector> ElementSelectorPtr;
 
     // View Type
     struct ViewTypeField
@@ -358,6 +381,7 @@ namespace jif
     void from_json(const nlohmann::json &json, ElementButton &element);
     void from_json(const nlohmann::json &json, ElementImage &element);
     void from_json(const nlohmann::json &json, ElementJoystick &element);
+    void from_json(const nlohmann::json &json, ElementSelector &element);
     void from_json(const nlohmann::json &json, ViewTypeField &field);
 
     void from_json(const nlohmann::json &json, DrawablePtr &drawable);

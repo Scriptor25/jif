@@ -158,6 +158,13 @@ void jif::from_json(const nlohmann::json &json, ElementJoystick &element)
     element.Dest = json["dest"];
 }
 
+void jif::from_json(const nlohmann::json &json, ElementSelector &element)
+{
+    element.Source = json["data"]["src"];
+    element.Value = json["data"]["value"];
+    element.Items = json["items"];
+}
+
 void jif::from_json(const nlohmann::json &json, ViewTypeField &field)
 {
     field.Id = json["id"];
@@ -240,6 +247,13 @@ void jif::from_json(const nlohmann::json &json, ViewTypeElementPtr &element)
     if (type == "joystick")
     {
         auto elem = std::make_shared<ElementJoystick>();
+        from_json(json, *elem);
+        element = elem;
+        return;
+    }
+    if (type == "selector")
+    {
+        auto elem = std::make_shared<ElementSelector>();
         from_json(json, *elem);
         element = elem;
         return;
